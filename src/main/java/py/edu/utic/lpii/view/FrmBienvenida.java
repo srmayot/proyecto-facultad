@@ -1,16 +1,25 @@
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JInternalFrame.java to edit this template
  */
 package py.edu.utic.lpii.view;
 
+import javax.swing.JOptionPane;
+
 /**
- *
+ * VENTANA INTERNA HIJA DE BIENVENIDA (JINTERNALFRAME)
+ * 
+ * Capa de Presentación (View):
+ * Creada en NetBeans con: New > JInternalFrame Form...
+ * En la ventana Properties se activan las 4 casillas MDI fundamentales:
+ * - closable = true
+ * - iconifiable = true
+ * - maximizable = true
+ * - resizable = true
+ * 
  * @author srmayot
  */
-public class FrmBienvenida extends javax.swing.JFrame {
-    
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmBienvenida.class.getName());
+public class FrmBienvenida extends javax.swing.JInternalFrame {
 
     /**
      * Creates new form FrmBienvenida
@@ -28,47 +37,130 @@ public class FrmBienvenida extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        pnlTop = new javax.swing.JPanel();
+        lblTitulo = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        pnlCards = new javax.swing.JPanel();
+        btnProductos = new javax.swing.JButton();
+        btnClientes = new javax.swing.JButton();
+        btnVentas = new javax.swing.JButton();
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+        setClosable(true);
+        setIconifiable(true);
+        setMaximizable(true);
+        setResizable(true);
+        setTitle("Bienvenido al Sistema Comercial UTIC");
+
+        lblTitulo.setText("¡Bienvenido al Sistema Comercial UTIC!");
+
+        jLabel2.setText("Seleccione una opción rápida o use el menú superior");
+
+        jLabel3.setText("Módulo de Gestión Académica - UTIC LP II");
+
+        javax.swing.GroupLayout pnlTopLayout = new javax.swing.GroupLayout(pnlTop);
+        pnlTop.setLayout(pnlTopLayout);
+        pnlTopLayout.setHorizontalGroup(
+            pnlTopLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pnlTopLayout.createSequentialGroup()
+                .addGroup(pnlTopLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(pnlTopLayout.createSequentialGroup()
+                        .addGap(167, 167, 167)
+                        .addComponent(lblTitulo))
+                    .addGroup(pnlTopLayout.createSequentialGroup()
+                        .addGap(129, 129, 129)
+                        .addComponent(jLabel2))
+                    .addGroup(pnlTopLayout.createSequentialGroup()
+                        .addGap(157, 157, 157)
+                        .addComponent(jLabel3)))
+                .addContainerGap(181, Short.MAX_VALUE))
         );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+        pnlTopLayout.setVerticalGroup(
+            pnlTopLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlTopLayout.createSequentialGroup()
+                .addContainerGap(10, Short.MAX_VALUE)
+                .addComponent(lblTitulo)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jLabel2)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jLabel3)
+                .addGap(18, 18, 18))
         );
+
+        getContentPane().add(pnlTop, java.awt.BorderLayout.PAGE_START);
+
+        btnProductos.setText("Catálogo de Productos");
+        btnProductos.addActionListener(this::btnProductosActionPerformed);
+
+        btnClientes.setText("Gestión de Clientes");
+        btnClientes.addActionListener(this::btnClientesActionPerformed);
+
+        btnVentas.setText("Punto de Venta / Ventas");
+        btnVentas.addActionListener(this::btnVentasActionPerformed);
+
+        javax.swing.GroupLayout pnlCardsLayout = new javax.swing.GroupLayout(pnlCards);
+        pnlCards.setLayout(pnlCardsLayout);
+        pnlCardsLayout.setHorizontalGroup(
+            pnlCardsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pnlCardsLayout.createSequentialGroup()
+                .addGroup(pnlCardsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(pnlCardsLayout.createSequentialGroup()
+                        .addGap(198, 198, 198)
+                        .addGroup(pnlCardsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(btnVentas)
+                            .addComponent(btnProductos)))
+                    .addGroup(pnlCardsLayout.createSequentialGroup()
+                        .addGap(210, 210, 210)
+                        .addComponent(btnClientes)))
+                .addContainerGap(233, Short.MAX_VALUE))
+        );
+        pnlCardsLayout.setVerticalGroup(
+            pnlCardsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pnlCardsLayout.createSequentialGroup()
+                .addGap(37, 37, 37)
+                .addComponent(btnProductos)
+                .addGap(18, 18, 18)
+                .addComponent(btnClientes)
+                .addGap(18, 18, 18)
+                .addComponent(btnVentas)
+                .addContainerGap(203, Short.MAX_VALUE))
+        );
+
+        getContentPane().add(pnlCards, java.awt.BorderLayout.CENTER);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
+    private void btnProductosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnProductosActionPerformed
+        // TODO add your handling code here:
+        JOptionPane.showMessageDialog(this, 
+            "Acceso directo al Catálogo de Productos (Se desarrollará en la Semana 5).",
+            "Acceso Rápido", JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_btnProductosActionPerformed
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new FrmBienvenida().setVisible(true));
-    }
+    private void btnClientesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClientesActionPerformed
+        // TODO add your handling code here:
+        JOptionPane.showMessageDialog(this, 
+            "Acceso directo a Gestión de Clientes con RUC paraguayo (Semana 5).",
+            "Acceso Rápido", JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_btnClientesActionPerformed
+
+    private void btnVentasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVentasActionPerformed
+        // TODO add your handling code here:
+        JOptionPane.showMessageDialog(this, 
+            "Acceso directo al Punto de Venta / Facturación Comercial (Semana 7).",
+            "Acceso Rápido", JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_btnVentasActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnClientes;
+    private javax.swing.JButton btnProductos;
+    private javax.swing.JButton btnVentas;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel lblTitulo;
+    private javax.swing.JPanel pnlCards;
+    private javax.swing.JPanel pnlTop;
     // End of variables declaration//GEN-END:variables
 }
