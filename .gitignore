@@ -1,1 +1,12 @@
 /target/
+/.nb-attrs
+/.settings/
+/nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.gradle/
+bin/
+.DS_Store
+

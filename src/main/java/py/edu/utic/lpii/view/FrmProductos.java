@@ -135,8 +135,8 @@ public class FrmProductos extends javax.swing.JInternalFrame {
         btnNuevo.setEnabled(!editando);
         btnGuardar.setEnabled(editando);
         btnCancelar.setEnabled(editando);
-        btnModificar.setEnabled(false);
-        btnEliminar.setEnabled(false);
+        //btnModificar.setEnabled(false);
+        //btnEliminar.setEnabled(false);
     }
 
     /**
@@ -406,8 +406,8 @@ public class FrmProductos extends javax.swing.JInternalFrame {
             cmbIva.setSelectedItem(tblProductos.getValueAt(fila, 5).toString());
 
             // 3. Habilitar botones de acción para el registro seleccionado:
-            btnModificar.setEnabled(true);
-            btnEliminar.setEnabled(true);
+            //btnModificar.setEnabled(true);
+            //btnEliminar.setEnabled(true);
             btnNuevo.setEnabled(false);
         }
     }//GEN-LAST:event_tblProductosMouseClicked

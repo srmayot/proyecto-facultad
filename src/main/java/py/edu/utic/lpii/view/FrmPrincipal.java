@@ -21,6 +21,7 @@ public class FrmPrincipal extends javax.swing.JFrame {
 
     private FrmProductos ventanaProductos;
     private FrmClientes ventanaClientes;
+    private FrmProveedores frmProveedores = null;
 
     public FrmPrincipal() {
         initComponents();
@@ -53,6 +54,7 @@ public class FrmPrincipal extends javax.swing.JFrame {
         mantenimiento = new javax.swing.JMenu();
         itemProductos = new javax.swing.JMenuItem();
         itemClientes = new javax.swing.JMenuItem();
+        itemProveedores = new javax.swing.JMenuItem();
         movimientos = new javax.swing.JMenu();
         reportes = new javax.swing.JMenu();
         ver = new javax.swing.JMenu();
@@ -62,12 +64,11 @@ public class FrmPrincipal extends javax.swing.JFrame {
         itemAcercaDe = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        getContentPane().setLayout(new java.awt.BorderLayout());
 
         desktopPane.setBackground(new java.awt.Color(30, 34, 42));
 
         pnlStatusBar.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-        pnlStatusBar.setLayout(new java.awt.FlowLayout(0));
+        pnlStatusBar.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
 
         lblUsuario.setText("Operador: Sergio Mayot");
         pnlStatusBar.add(lblUsuario);
@@ -127,6 +128,7 @@ public class FrmPrincipal extends javax.swing.JFrame {
 
         mantenimiento.setMnemonic('M');
         mantenimiento.setText("Mantenimiento");
+        mantenimiento.addActionListener(this::mantenimientoActionPerformed);
 
         itemProductos.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_P, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         itemProductos.setText("Productos");
@@ -137,6 +139,10 @@ public class FrmPrincipal extends javax.swing.JFrame {
         itemClientes.setText("Clientes");
         itemClientes.addActionListener(this::itemClientesActionPerformed);
         mantenimiento.add(itemClientes);
+
+        itemProveedores.setText("Proveedores");
+        itemProveedores.addActionListener(this::itemProveedoresActionPerformed);
+        mantenimiento.add(itemProveedores);
 
         MenuBar.add(mantenimiento);
 
@@ -216,11 +222,11 @@ public class FrmPrincipal extends javax.swing.JFrame {
         // 1. Control de Instancia Única: verificar si no existe o fue cerrada con la 'X'
         if (ventanaClientes == null || ventanaClientes.isClosed()) {
             ventanaClientes = new FrmClientes();
-            jDesktopPane.add(ventanaClientes);
+            desktopPane.add(ventanaClientes);
 
             // 2. Centrado Geométrico milimétrico dentro del área de trabajo del JDesktopPane:
-            int x = (jDesktopPane.getWidth() - ventanaClientes.getWidth()) / 2;
-            int y = (jDesktopPane.getHeight() - ventanaClientes.getHeight()) / 2;
+            int x = (desktopPane.getWidth() - ventanaClientes.getWidth()) / 2;
+            int y = (desktopPane.getHeight() - ventanaClientes.getHeight()) / 2;
             ventanaClientes.setLocation(Math.max(0, x), Math.max(0, y));
 
             // 3. Hacer visible el formulario en el escritorio:
@@ -286,6 +292,35 @@ public class FrmPrincipal extends javax.swing.JFrame {
         // Lo hacemos visible (el código de centrado y modal ya lo configuramos dentro del diálogo)
         dlg.setVisible(true);
     }//GEN-LAST:event_itemAcercaDeActionPerformed
+
+    private void mantenimientoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mantenimientoActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_mantenimientoActionPerformed
+
+    private void itemProveedoresActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemProveedoresActionPerformed
+        // TODO add your handling code here:
+        try {
+            // 1. Verificar si la ventana no existe o fue cerrada para instanciarla:
+            if (frmProveedores == null || frmProveedores.isClosed()) {
+                frmProveedores = new FrmProveedores();
+                desktopPane.add(frmProveedores);
+
+                // 2. Centrado geométrico dinámico dentro del JDesktopPane:
+                int x = (desktopPane.getWidth() - frmProveedores.getWidth()) / 2;
+                int y = (desktopPane.getHeight() - frmProveedores.getHeight()) / 2;
+                frmProveedores.setLocation(x, y);
+
+                frmProveedores.setVisible(true);
+            } else {
+                // 3. Si ya está abierta, traer al frente y restaurar si estaba minimizada:
+                frmProveedores.toFront();
+                frmProveedores.setSelected(true);
+            }
+        } catch (java.beans.PropertyVetoException ex) {
+            System.err.println("Error al enfocar FrmProveedores: " + ex.getMessage());
+        }
+
+    }//GEN-LAST:event_itemProveedoresActionPerformed
 
     public void abrirFormularioCentrado(JInternalFrame formulario) {
         if (formulario == null || desktopPane == null) {
@@ -409,6 +444,7 @@ public class FrmPrincipal extends javax.swing.JFrame {
     private javax.swing.JMenuItem itemAcercaDe;
     private javax.swing.JMenuItem itemClientes;
     private javax.swing.JMenuItem itemProductos;
+    private javax.swing.JMenuItem itemProveedores;
     private javax.swing.JMenuItem itemSalir;
     private javax.swing.JMenuItem itemTemaClaro;
     private javax.swing.JMenuItem itemTemaOscuro;
