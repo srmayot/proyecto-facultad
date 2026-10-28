@@ -19,6 +19,9 @@ public class FrmPrincipal extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmPrincipal.class.getName());
 
+    private FrmProductos ventanaProductos;
+    private FrmClientes ventanaClientes;
+
     public FrmPrincipal() {
         initComponents();
 
@@ -210,9 +213,27 @@ public class FrmPrincipal extends javax.swing.JFrame {
 
     private void itemClientesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemClientesActionPerformed
         // TODO add your handling code here:
-        JOptionPane.showMessageDialog(this,
-                "El formulario FrmCliente se construirá en el Cierre Asincrónico de la Semana 5.",
-                "Gestión de Clientes", JOptionPane.INFORMATION_MESSAGE);
+        // 1. Control de Instancia Única: verificar si no existe o fue cerrada con la 'X'
+        if (ventanaClientes == null || ventanaClientes.isClosed()) {
+            ventanaClientes = new FrmClientes();
+            jDesktopPane.add(ventanaClientes);
+
+            // 2. Centrado Geométrico milimétrico dentro del área de trabajo del JDesktopPane:
+            int x = (jDesktopPane.getWidth() - ventanaClientes.getWidth()) / 2;
+            int y = (jDesktopPane.getHeight() - ventanaClientes.getHeight()) / 2;
+            ventanaClientes.setLocation(Math.max(0, x), Math.max(0, y));
+
+            // 3. Hacer visible el formulario en el escritorio:
+            ventanaClientes.setVisible(true);
+        } else {
+            // 4. Si ya estaba abierta, restaurarla al frente y darle foco:
+            ventanaClientes.toFront();
+            try {
+                ventanaClientes.setSelected(true);
+            } catch (java.beans.PropertyVetoException e) {
+                System.err.println("No se pudo seleccionar la ventana: " + e.getMessage());
+            }
+        }
     }//GEN-LAST:event_itemClientesActionPerformed
 
     private void itemSalirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemSalirActionPerformed
@@ -222,9 +243,29 @@ public class FrmPrincipal extends javax.swing.JFrame {
 
     private void itemProductosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemProductosActionPerformed
         // TODO add your handling code here:
-        JOptionPane.showMessageDialog(this,
-                "El formulario FrmProducto se construirá en el Laboratorio de la Semana 5.",
-                "Mantenimiento de Productos", JOptionPane.INFORMATION_MESSAGE);
+        // 1. Control de Instancia Única: verificar si no existe o fue cerrada con la 'X'
+        // TODO add your handling code here:
+        // 1. Control de Instancia Única: verificar si no existe o fue cerrada con la 'X'
+        if (ventanaProductos == null || ventanaProductos.isClosed()) {
+            ventanaProductos = new FrmProductos();
+            desktopPane.add(ventanaProductos); // <-- Aquí cambiamos jDesktopPane por desktopPane
+
+            // 2. Centrado Geométrico milimétrico dentro del área de trabajo del JDesktopPane:
+            int x = (desktopPane.getWidth() - ventanaProductos.getWidth()) / 2; // <-- Aquí también
+            int y = (desktopPane.getHeight() - ventanaProductos.getHeight()) / 2; // <-- Y aquí
+            ventanaProductos.setLocation(Math.max(0, x), Math.max(0, y));
+
+            // 3. Hacer visible el formulario en el escritorio:
+            ventanaProductos.setVisible(true);
+        } else {
+            // 4. Si ya estaba abierta, restaurarla al frente y darle foco:
+            ventanaProductos.toFront();
+            try {
+                ventanaProductos.setSelected(true);
+            } catch (java.beans.PropertyVetoException e) {
+                System.err.println("No se pudo seleccionar la ventana: " + e.getMessage());
+            }
+        }
     }//GEN-LAST:event_itemProductosActionPerformed
 
     private void itemTemaOscuroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemTemaOscuroActionPerformed
@@ -241,13 +282,15 @@ public class FrmPrincipal extends javax.swing.JFrame {
         // TODO add your handling code here:
         // Creamos la instancia pasando 'this' como ventana principal y 'true' para que sea modal
         DlgAcercaDe dlg = new DlgAcercaDe(this, true);
-        
+
         // Lo hacemos visible (el código de centrado y modal ya lo configuramos dentro del diálogo)
         dlg.setVisible(true);
     }//GEN-LAST:event_itemAcercaDeActionPerformed
 
     public void abrirFormularioCentrado(JInternalFrame formulario) {
-        if (formulario == null || desktopPane == null) return;
+        if (formulario == null || desktopPane == null) {
+            return;
+        }
 
         for (JInternalFrame frameExistente : desktopPane.getAllFrames()) {
             if (frameExistente.getClass().equals(formulario.getClass())) {
@@ -271,7 +314,8 @@ public class FrmPrincipal extends javax.swing.JFrame {
         formulario.setVisible(true);
         try {
             formulario.setSelected(true);
-        } catch (Exception ex) {}
+        } catch (Exception ex) {
+        }
     }
 
     private void abrirDialogoAcercaDe() {
@@ -290,10 +334,14 @@ public class FrmPrincipal extends javax.swing.JFrame {
         try {
             if (oscuro) {
                 FlatDarkLaf.setup();
-                if (desktopPane != null) desktopPane.setBackground(new java.awt.Color(30, 34, 42));
+                if (desktopPane != null) {
+                    desktopPane.setBackground(new java.awt.Color(30, 34, 42));
+                }
             } else {
                 FlatLightLaf.setup();
-                if (desktopPane != null) desktopPane.setBackground(new java.awt.Color(220, 224, 230));
+                if (desktopPane != null) {
+                    desktopPane.setBackground(new java.awt.Color(220, 224, 230));
+                }
             }
             SwingUtilities.updateComponentTreeUI(this);
         } catch (Exception ex) {
@@ -303,17 +351,17 @@ public class FrmPrincipal extends javax.swing.JFrame {
 
     private void confirmarSalida() {
         int resp = JOptionPane.showConfirmDialog(
-                this, 
-                "¿Está seguro de que desea salir del Sistema Comercial UTIC?", 
-                "Confirmar Cierre de Aplicación", 
-                JOptionPane.YES_NO_OPTION, 
+                this,
+                "¿Está seguro de que desea salir del Sistema Comercial UTIC?",
+                "Confirmar Cierre de Aplicación",
+                JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE
         );
         if (resp == JOptionPane.YES_OPTION) {
             System.exit(0);
         }
     }
-    
+
     /**
      * @param args the command line arguments
      */
@@ -330,14 +378,17 @@ public class FrmPrincipal extends javax.swing.JFrame {
             new FrmPrincipal().setVisible(true);
         });
     }
-    
+
     /**
-     * Desafío Examen Parcial: Inicia un hilo Timer de Swing que refresca el segundero
-     * cada 1000 milisegundos (1 segundo) con la hora del sistema operativo.
+     * Desafío Examen Parcial: Inicia un hilo Timer de Swing que refresca el
+     * segundero cada 1000 milisegundos (1 segundo) con la hora del sistema
+     * operativo.
      */
     private void iniciarRelojDigital() {
-        if (lblHora == null) return;
-        
+        if (lblHora == null) {
+            return;
+        }
+
         // Timer de Swing sincronizado con el Event Dispatch Thread (EDT)
         javax.swing.Timer timerReloj = new javax.swing.Timer(1000, new java.awt.event.ActionListener() {
             @Override
