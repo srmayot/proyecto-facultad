@@ -1,5 +1,6 @@
 C:\Users\srmayot\Documents\NetBeansProjects\AppMain\src\main\java\py\edu\utic\lpii\AppMain.java
 C:\Users\srmayot\Documents\NetBeansProjects\AppMain\src\main\java\py\edu\utic\lpii\dao\DBConnection.java
+C:\Users\srmayot\Documents\NetBeansProjects\AppMain\src\main\java\py\edu\utic\lpii\dao\IProductoDAO.java
 C:\Users\srmayot\Documents\NetBeansProjects\AppMain\src\main\java\py\edu\utic\lpii\model\Categoria.java
 C:\Users\srmayot\Documents\NetBeansProjects\AppMain\src\main\java\py\edu\utic\lpii\model\Cliente.java
 C:\Users\srmayot\Documents\NetBeansProjects\AppMain\src\main\java\py\edu\utic\lpii\model\Producto.java
@@ -7,7 +8,12 @@ C:\Users\srmayot\Documents\NetBeansProjects\AppMain\src\main\java\py\edu\utic\lp
 C:\Users\srmayot\Documents\NetBeansProjects\AppMain\src\main\java\py\edu\utic\lpii\model\Usuario.java
 C:\Users\srmayot\Documents\NetBeansProjects\AppMain\src\main\java\py\edu\utic\lpii\service\ClienteService.java
 C:\Users\srmayot\Documents\NetBeansProjects\AppMain\src\main\java\py\edu\utic\lpii\service\ProductoService.java
+C:\Users\srmayot\Documents\NetBeansProjects\AppMain\src\main\java\py\edu\utic\lpii\util\ReporteUtil.java
 C:\Users\srmayot\Documents\NetBeansProjects\AppMain\src\main\java\py\edu\utic\lpii\util\ThemeManager.java
+C:\Users\srmayot\Documents\NetBeansProjects\AppMain\src\main\java\py\edu\utic\lpii\util\ValidadorUtil.java
 C:\Users\srmayot\Documents\NetBeansProjects\AppMain\src\main\java\py\edu\utic\lpii\view\DlgAcercaDe.java
 C:\Users\srmayot\Documents\NetBeansProjects\AppMain\src\main\java\py\edu\utic\lpii\view\FrmBienvenida.java
+C:\Users\srmayot\Documents\NetBeansProjects\AppMain\src\main\java\py\edu\utic\lpii\view\FrmClientes.java
 C:\Users\srmayot\Documents\NetBeansProjects\AppMain\src\main\java\py\edu\utic\lpii\view\FrmPrincipal.java
+C:\Users\srmayot\Documents\NetBeansProjects\AppMain\src\main\java\py\edu\utic\lpii\view\FrmProductos.java
+C:\Users\srmayot\Documents\NetBeansProjects\AppMain\src\main\java\py\edu\utic\lpii\view\FrmProveedores.java

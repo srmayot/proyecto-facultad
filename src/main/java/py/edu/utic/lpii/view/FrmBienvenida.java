@@ -133,23 +133,35 @@ public class FrmBienvenida extends javax.swing.JInternalFrame {
 
     private void btnProductosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnProductosActionPerformed
         // TODO add your handling code here:
-        JOptionPane.showMessageDialog(this, 
-            "Acceso directo al Catálogo de Productos (Se desarrollará en la Semana 5).",
-            "Acceso Rápido", JOptionPane.INFORMATION_MESSAGE);
+        py.edu.utic.lpii.view.FrmPrincipal principal = 
+            (py.edu.utic.lpii.view.FrmPrincipal) javax.swing.SwingUtilities.getWindowAncestor(this);
+
+        // 2. Si se encontró la ventana principal, invocamos su método para abrir el formulario centrado:
+        if (principal != null) {
+            principal.abrirFormularioCentrado(new FrmProductos());
+        }
     }//GEN-LAST:event_btnProductosActionPerformed
 
     private void btnClientesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClientesActionPerformed
         // TODO add your handling code here:
-        JOptionPane.showMessageDialog(this, 
-            "Acceso directo a Gestión de Clientes con RUC paraguayo (Semana 5).",
-            "Acceso Rápido", JOptionPane.INFORMATION_MESSAGE);
+        py.edu.utic.lpii.view.FrmPrincipal principal = 
+            (py.edu.utic.lpii.view.FrmPrincipal) javax.swing.SwingUtilities.getWindowAncestor(this);
+
+        // 2. Si se encontró, invocamos el método para abrir la gestión de clientes centrada:
+        if (principal != null) {
+            principal.abrirFormularioCentrado(new FrmClientes());
+        }
     }//GEN-LAST:event_btnClientesActionPerformed
 
     private void btnVentasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVentasActionPerformed
         // TODO add your handling code here:
-        JOptionPane.showMessageDialog(this, 
-            "Acceso directo al Punto de Venta / Facturación Comercial (Semana 7).",
-            "Acceso Rápido", JOptionPane.INFORMATION_MESSAGE);
+        py.edu.utic.lpii.view.FrmPrincipal principal = 
+            (py.edu.utic.lpii.view.FrmPrincipal) javax.swing.SwingUtilities.getWindowAncestor(this);
+
+        // 2. Si se encontró, invocamos el método para abrir la gestión de clientes centrada:
+        if (principal != null) {
+            principal.abrirFormularioCentrado(new FrmProveedores());
+        }
     }//GEN-LAST:event_btnVentasActionPerformed
 
 

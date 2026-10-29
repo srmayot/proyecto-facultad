@@ -1,5 +1,6 @@
 package py.edu.utic.lpii.view;
 
+import py.edu.utic.lpii.util.ReporteUtil;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import java.time.LocalDate;
@@ -9,6 +10,7 @@ import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+
 
 /**
  * VENTANA PRINCIPAL DEL SISTEMA (PATRÓN MDI)
@@ -25,7 +27,7 @@ public class FrmPrincipal extends javax.swing.JFrame {
 
     public FrmPrincipal() {
         initComponents();
-
+        
         // Configuraciones personalizadas agregadas por el desarrollador:
         configurarVentana();
 
@@ -57,6 +59,10 @@ public class FrmPrincipal extends javax.swing.JFrame {
         itemProveedores = new javax.swing.JMenuItem();
         movimientos = new javax.swing.JMenu();
         reportes = new javax.swing.JMenu();
+        jMenuItem1 = new javax.swing.JMenuItem();
+        jMenuItem2 = new javax.swing.JMenuItem();
+        jMenuItem3 = new javax.swing.JMenuItem();
+        jMenuItem4 = new javax.swing.JMenuItem();
         ver = new javax.swing.JMenu();
         itemTemaOscuro = new javax.swing.JMenuItem();
         itemTemaClaro = new javax.swing.JMenuItem();
@@ -152,6 +158,23 @@ public class FrmPrincipal extends javax.swing.JFrame {
 
         reportes.setMnemonic('R');
         reportes.setText("Reportes");
+
+        jMenuItem1.setText("Listado de Clientes");
+        jMenuItem1.addActionListener(this::jMenuItem1ActionPerformed);
+        reportes.add(jMenuItem1);
+
+        jMenuItem2.setText("Catálogo de Productos");
+        jMenuItem2.addActionListener(this::jMenuItem2ActionPerformed);
+        reportes.add(jMenuItem2);
+
+        jMenuItem3.setText("Listado de Proveedores");
+        jMenuItem3.addActionListener(this::jMenuItem3ActionPerformed);
+        reportes.add(jMenuItem3);
+
+        jMenuItem4.setText("Comprobante de Factura");
+        jMenuItem4.addActionListener(this::jMenuItem4ActionPerformed);
+        reportes.add(jMenuItem4);
+
         MenuBar.add(reportes);
 
         ver.setMnemonic('T');
@@ -322,6 +345,22 @@ public class FrmPrincipal extends javax.swing.JFrame {
 
     }//GEN-LAST:event_itemProveedoresActionPerformed
 
+    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jMenuItem1ActionPerformed
+
+    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jMenuItem2ActionPerformed
+
+    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jMenuItem3ActionPerformed
+
+    private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jMenuItem4ActionPerformed
+
     public void abrirFormularioCentrado(JInternalFrame formulario) {
         if (formulario == null || desktopPane == null) {
             return;
@@ -351,6 +390,29 @@ public class FrmPrincipal extends javax.swing.JFrame {
             formulario.setSelected(true);
         } catch (Exception ex) {
         }
+    }
+    
+private void abrirReporteClientes() {
+        // Obtenemos la conexión activa mediante el Singleton de DBConnection
+        java.sql.Connection con = py.edu.utic.lpii.dao.DBConnection.getInstance().getConnection(); 
+        
+        // Llamamos al visor pasando la ruta del reporte compilado
+        ReporteUtil.mostrarReporte("/reportes/rptClientes.jasper", con);
+    }
+
+    private void abrirReporteProductos() {
+        java.sql.Connection con = py.edu.utic.lpii.dao.DBConnection.getInstance().getConnection();
+        ReporteUtil.mostrarReporte("/reportes/rptProductos.jasper", con);
+    }
+
+    private void abrirReporteProveedores() {
+        java.sql.Connection con = py.edu.utic.lpii.dao.DBConnection.getInstance().getConnection();
+        ReporteUtil.mostrarReporte("/reportes/rptProveedores.jasper", con);
+    }
+
+    private void abrirReporteFactura() {
+        java.sql.Connection con = py.edu.utic.lpii.dao.DBConnection.getInstance().getConnection();
+        ReporteUtil.mostrarReporte("/reportes/rptFactura.jasper", con);
     }
 
     private void abrirDialogoAcercaDe() {
@@ -448,6 +510,10 @@ public class FrmPrincipal extends javax.swing.JFrame {
     private javax.swing.JMenuItem itemSalir;
     private javax.swing.JMenuItem itemTemaClaro;
     private javax.swing.JMenuItem itemTemaOscuro;
+    private javax.swing.JMenuItem jMenuItem1;
+    private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JMenuItem jMenuItem3;
+    private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator2;
     private javax.swing.JSeparator jSeparator3;
