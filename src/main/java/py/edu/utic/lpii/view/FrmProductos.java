@@ -4,23 +4,56 @@
  */
 package py.edu.utic.lpii.view;
 
+import py.edu.utic.lpii.dao.IProductoDAO;
+import py.edu.utic.lpii.dao.ProductoDAO;
+import py.edu.utic.lpii.model.Producto;
+
+import java.util.List;
+import java.sql.SQLException;
+import javax.swing.JOptionPane;
+
+import javax.swing.table.DefaultTableModel;
+import java.text.DecimalFormat;
+
 /**
  *
  * @author srmayot
  */
 public class FrmProductos extends javax.swing.JInternalFrame {
 
+    // 🎯 1. Capa de acceso a datos (Instancia del DAO):
+    private IProductoDAO productoDAO = new ProductoDAO();
+
+    // 🎯 2. Control de estado de edición:
+    // null = Estamos agregando un producto NUEVO
+    // número = Estamos EDITANDO un producto existente en PostgreSQL
+    private Integer idProductoSeleccionado = null;
+
+    // 🎯 3. Modelo de la tabla Swing:
+    private DefaultTableModel modeloTabla;
+    private final DecimalFormat formatoGs = new DecimalFormat("#,##0 'Gs.'");
+
+    // Métodos y eventos a continuación...
     /**
      * Creates new form FrmProductos
      */
     public FrmProductos() {
         initComponents();
 
-        // 🟢 Configuración inicial del formulario:
+        // 🟢 1. INICIALIZAR EL MODELO DE LA TABLA (¡ESTO FALTABA!)
+        // Opción A: Si ya tienes el método inicializarTabla() creado abajo:
+        inicializarTabla();
+
+        // O si prefieres asignarlo directamente aquí:
+        // modeloTabla = (DefaultTableModel) tblProductos.getModel();
+        // 🟢 2. Configuración inicial del formulario:
         this.setTitle("Mantenimiento de Productos");
         limpiarCampos();
         habilitarCampos(false);
         configurarEstadoBotones(false);
+
+        // 🟢 3. Cargar los datos desde la BD ahora que la tabla ya tiene modelo:
+        cargarTablaDesdeBD();
     }
 
     private void inicializarTabla() {
@@ -28,24 +61,26 @@ public class FrmProductos extends javax.swing.JInternalFrame {
             "Código", "Descripción", "Categoría", "Precio (Gs.)", "Stock", "IVA", "Estado"
         };
 
-        // 🔒 Modelo de tabla con sobrescritura anónima para evitar edición accidental:
         javax.swing.table.DefaultTableModel modelo = new javax.swing.table.DefaultTableModel(titulos, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Ninguna celda puede ser modificada haciendo doble clic en la grilla
+                return false;
             }
         };
 
         tblProductos.setModel(modelo);
 
-        // Configuración de anchos visuales preferidos de columna:
-        tblProductos.getColumnModel().getColumn(0).setPreferredWidth(70);  // Código
-        tblProductos.getColumnModel().getColumn(1).setPreferredWidth(200); // Descripción
-        tblProductos.getColumnModel().getColumn(2).setPreferredWidth(110); // Categoría
-        tblProductos.getColumnModel().getColumn(3).setPreferredWidth(100); // Precio
-        tblProductos.getColumnModel().getColumn(4).setPreferredWidth(60);  // Stock
-        tblProductos.getColumnModel().getColumn(5).setPreferredWidth(70);  // IVA
-        tblProductos.getColumnModel().getColumn(6).setPreferredWidth(80);  // Estado
+        // 🎯 ENLAZAR A TU VARIABLE GLOBAL QUE USAS EN TODO EL FORMULARIO:
+        this.modeloTabla = modelo;
+
+        // Configuración de anchos...
+        tblProductos.getColumnModel().getColumn(0).setPreferredWidth(70);
+        tblProductos.getColumnModel().getColumn(1).setPreferredWidth(200);
+        tblProductos.getColumnModel().getColumn(2).setPreferredWidth(110);
+        tblProductos.getColumnModel().getColumn(3).setPreferredWidth(100);
+        tblProductos.getColumnModel().getColumn(4).setPreferredWidth(60);
+        tblProductos.getColumnModel().getColumn(5).setPreferredWidth(70);
+        tblProductos.getColumnModel().getColumn(6).setPreferredWidth(80);
     }
 
     /**
@@ -139,6 +174,43 @@ public class FrmProductos extends javax.swing.JInternalFrame {
         //btnEliminar.setEnabled(false);
     }
 
+    // =========================================================================
+// 💡 REFRESCADO ATÓMICO DE LA GRILLA DESDE POSTGRESQL
+// =========================================================================
+    private void cargarTablaDesdeBD() {
+        // 1. Limpiar filas existentes en la tabla visual:
+        modeloTabla.setRowCount(0);
+
+        try {
+            // 2. Consultar al DAO la lista fresca de productos desde PostgreSQL:
+            List<Producto> productos = productoDAO.listarTodos();
+
+            // 3. Recorrer y agregar cada tupla al DefaultTableModel:
+            for (Producto p : productos) {
+                modeloTabla.addRow(new Object[]{
+                    p.getId(), // Columna 0 (ID de PostgreSQL)
+                    p.getCodigo(), // Columna 1
+                    p.getNombre(), // Columna 2
+                    formatoGs.format(p.getPrecio()), // Columna 3 (Formateado en Gs.)
+                    p.getStock(), // Columna 4
+                    p.getIva() + "%", // Columna 5
+                    p.isActivo() ? "Activo" : "Inactivo" // Columna 6
+                });
+            }
+
+            // Si no tienes el JLabel en tu diseño, puedes omitir la siguiente línea:
+            // lblEstadoRegistros.setText("Total de productos en base de datos: " + productos.size());
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Error al leer datos desde PostgreSQL 16:\n" + ex.getMessage(),
+                    "Error de Persistencia",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            ex.printStackTrace();
+        }
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -157,11 +229,18 @@ public class FrmProductos extends javax.swing.JInternalFrame {
         pnlDatos = new javax.swing.JPanel();
         txtCodigo = new javax.swing.JTextField();
         cmbCategoria = new javax.swing.JComboBox<>();
-        cmbIva = new javax.swing.JComboBox<>();
         chkActivo = new javax.swing.JCheckBox();
         txtDescripcion = new javax.swing.JTextField();
         txtPrecio = new javax.swing.JTextField();
+        lblCodigo = new javax.swing.JLabel();
+        lblDescripcion = new javax.swing.JLabel();
+        lblPrecioUnit = new javax.swing.JLabel();
+        lblStock = new javax.swing.JLabel();
         spnStock = new javax.swing.JSpinner();
+        cmbIva = new javax.swing.JComboBox<>();
+        jLabel1 = new javax.swing.JLabel();
+        btnModificar = new javax.swing.JButton();
+        btnEliminar = new javax.swing.JButton();
 
         setClosable(true);
         setMaximizable(true);
@@ -216,8 +295,6 @@ public class FrmProductos extends javax.swing.JInternalFrame {
 
         cmbCategoria.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Bebidas", "Lácteos", "Almacén", "Limpieza" }));
 
-        cmbIva.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "10%", "5%", "Exenta (Ley 6380/19)" }));
-
         chkActivo.setSelected(true);
         chkActivo.setText("Activo para Facturación");
 
@@ -234,81 +311,136 @@ public class FrmProductos extends javax.swing.JInternalFrame {
             }
         });
 
+        lblCodigo.setText("Código del Producto");
+
+        lblDescripcion.setText("Descripción Comercial / Nombre");
+
+        lblPrecioUnit.setText("Precio Unitario (Gs)");
+
+        lblStock.setText("Stock Inicial");
+
         spnStock.setModel(new javax.swing.SpinnerNumberModel(0, 0, 999, 1));
+
+        cmbIva.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "10%", "5%", "Exenta (Ley 6380/19)" }));
+
+        jLabel1.setText("Tasa IVA");
 
         javax.swing.GroupLayout pnlDatosLayout = new javax.swing.GroupLayout(pnlDatos);
         pnlDatos.setLayout(pnlDatosLayout);
         pnlDatosLayout.setHorizontalGroup(
             pnlDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlDatosLayout.createSequentialGroup()
+            .addGroup(pnlDatosLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(pnlDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(cmbIva, 0, 1, Short.MAX_VALUE)
-                    .addComponent(cmbCategoria, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(txtCodigo))
                 .addGroup(pnlDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(pnlDatosLayout.createSequentialGroup()
-                        .addGap(18, 18, 18)
-                        .addComponent(chkActivo))
+                        .addGroup(pnlDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(pnlDatosLayout.createSequentialGroup()
+                                .addComponent(spnStock, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 73, Short.MAX_VALUE)
+                                .addGroup(pnlDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(pnlDatosLayout.createSequentialGroup()
+                                        .addComponent(cmbIva, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(185, 185, 185))
+                                    .addGroup(pnlDatosLayout.createSequentialGroup()
+                                        .addComponent(jLabel1)
+                                        .addGap(19, 19, 19))))
+                            .addGroup(pnlDatosLayout.createSequentialGroup()
+                                .addComponent(lblDescripcion)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addComponent(chkActivo)
+                        .addGap(18, 18, 18))
                     .addGroup(pnlDatosLayout.createSequentialGroup()
-                        .addGap(105, 105, 105)
-                        .addGroup(pnlDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(txtDescripcion, javax.swing.GroupLayout.PREFERRED_SIZE, 1, Short.MAX_VALUE)
-                            .addComponent(txtPrecio, javax.swing.GroupLayout.DEFAULT_SIZE, 124, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 68, Short.MAX_VALUE)
-                        .addComponent(spnStock, javax.swing.GroupLayout.PREFERRED_SIZE, 134, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(15, 15, 15))
+                        .addGroup(pnlDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(lblCodigo)
+                            .addComponent(txtCodigo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(92, 92, 92)
+                        .addGroup(pnlDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(txtPrecio, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(lblPrecioUnit))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(pnlDatosLayout.createSequentialGroup()
+                        .addComponent(lblStock)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(pnlDatosLayout.createSequentialGroup()
+                        .addComponent(txtDescripcion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(88, 88, 88)
+                        .addComponent(cmbCategoria, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(40, 40, 40))))
         );
         pnlDatosLayout.setVerticalGroup(
             pnlDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(pnlDatosLayout.createSequentialGroup()
-                .addGap(22, 22, 22)
+                .addGap(25, 25, 25)
                 .addGroup(pnlDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(txtCodigo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtDescripcion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(36, 36, 36)
+                    .addComponent(lblCodigo)
+                    .addComponent(lblPrecioUnit))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(pnlDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cmbCategoria, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txtPrecio, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(spnStock, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(47, 47, 47)
-                .addGroup(pnlDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cmbIva, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(chkActivo))
-                .addContainerGap(35, Short.MAX_VALUE))
+                    .addComponent(txtCodigo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(pnlDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(pnlDatosLayout.createSequentialGroup()
+                        .addGap(28, 28, 28)
+                        .addComponent(cmbCategoria, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(58, 58, 58)
+                        .addComponent(chkActivo)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(pnlDatosLayout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 7, Short.MAX_VALUE)
+                        .addComponent(lblDescripcion)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtDescripcion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addGroup(pnlDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(lblStock)
+                            .addComponent(jLabel1))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(pnlDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(spnStock, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cmbIva, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(27, 27, 27))))
         );
+
+        btnModificar.setText("Modificar");
+        btnModificar.addActionListener(this::btnModificarActionPerformed);
+
+        btnEliminar.setText("Eliminar");
+        btnEliminar.addActionListener(this::btnEliminarActionPerformed);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 582, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addGroup(layout.createSequentialGroup()
-                            .addComponent(btnNuevo)
-                            .addGap(18, 18, 18)
-                            .addComponent(btnGuardar)
-                            .addGap(18, 18, 18)
-                            .addComponent(btnCancelar)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnSalir))
-                        .addComponent(pnlDatos, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(btnNuevo)
+                        .addGap(18, 18, 18)
+                        .addComponent(btnGuardar)
+                        .addGap(18, 18, 18)
+                        .addComponent(btnCancelar)
+                        .addGap(18, 18, 18)
+                        .addComponent(btnModificar)
+                        .addGap(18, 18, 18)
+                        .addComponent(btnEliminar)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnSalir))
+                    .addComponent(pnlDatos, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1)))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
+                .addGap(0, 3, Short.MAX_VALUE)
                 .addComponent(pnlDatos, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(btnNuevo)
-                        .addComponent(btnGuardar)
-                        .addComponent(btnCancelar))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnNuevo)
+                    .addComponent(btnGuardar)
+                    .addComponent(btnCancelar)
+                    .addComponent(btnModificar)
+                    .addComponent(btnEliminar)
                     .addComponent(btnSalir))
                 .addGap(20, 20, 20)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 166, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -339,41 +471,96 @@ public class FrmProductos extends javax.swing.JInternalFrame {
     }//GEN-LAST:event_txtPrecioKeyTyped
 
     private void btnNuevoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNuevoActionPerformed
-        // TODO add your handling code here:
         limpiarCampos();
         habilitarCampos(true);
         configurarEstadoBotones(true);
 
-        // Enfocar automáticamente el cursor en el primer campo a rellenar:
-        txtDescripcion.requestFocus();
+        // 🎯 Habilitar el campo de código para ingreso manual:
+        txtCodigo.setEditable(true);
+        txtCodigo.requestFocus(); // Envía el cursor directamente al campo código
     }//GEN-LAST:event_btnNuevoActionPerformed
 
     private void btnGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarActionPerformed
-        // TODO add your handling code here:
         // 1. Validar reglas de negocio y campos requeridos:
         if (!validarCampos()) {
             return; // Detiene el flujo si algún campo no cumple las reglas
         }
 
-        // 2. Extraer los datos limpios de la interfaz gráfica:
-        String cod = txtCodigo.getText().trim();
-        String desc = txtDescripcion.getText().trim();
-        long precio = Long.parseLong(txtPrecio.getText().trim());
-        int stock = (Integer) spnStock.getValue();
-        String categoria = cmbCategoria.getSelectedItem().toString();
-        String iva = cmbIva.getSelectedItem().toString();
-        boolean activo = chkActivo.isSelected();
+        try {
+            // 2. Extraer y limpiar los datos de la interfaz gráfica:
+            String cod = txtCodigo.getText().trim();
+            String desc = txtDescripcion.getText().trim();
 
-        // 3. Notificación de éxito al usuario (JOptionPane):
-        javax.swing.JOptionPane.showMessageDialog(this,
-                "¡Producto registrado exitosamente!",
-                "Sistema Comercial UTIC",
-                javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            // Usar BigDecimal para el precio (Estándar comercial y contable):
+            java.math.BigDecimal precio = new java.math.BigDecimal(txtPrecio.getText().trim());
 
-        // 4. Regresar el formulario al modo de reposo:
-        limpiarCampos();
-        habilitarCampos(false);
-        configurarEstadoBotones(false);
+            int stock = (Integer) spnStock.getValue();
+
+            // Convertir el texto del ComboBox de IVA a un número entero (10, 5 o 0):
+            String ivaStr = cmbIva.getSelectedItem().toString();
+            int ivaVal = 10; // Por defecto
+            if (ivaStr.contains("5")) {
+                ivaVal = 5;
+            } else if (ivaStr.contains("Exenta") || ivaStr.contains("0")) {
+                ivaVal = 0;
+            }
+
+            boolean activo = chkActivo.isSelected();
+
+            // 3. Crear o poblar el objeto Producto:
+            Producto p = new Producto();
+            p.setCodigo(cod);
+            p.setNombre(desc);
+            p.setPrecio(precio);
+            p.setStock(stock);
+            p.setIva(ivaVal);
+            p.setActivo(activo);
+
+            // 4. Evaluar si es una INSERCIÓN NUEVA o una MODIFICACIÓN:
+            if (idProductoSeleccionado == null) {
+                // INSERTAR EN POSTGRESQL
+                productoDAO.insertar(p);
+                javax.swing.JOptionPane.showMessageDialog(
+                        this,
+                        "¡Producto registrado exitosamente!",
+                        "Sistema Comercial UTIC",
+                        javax.swing.JOptionPane.INFORMATION_MESSAGE
+                );
+            } else {
+                // ACTUALIZAR EN POSTGRESQL
+                p.setId(idProductoSeleccionado);
+                productoDAO.actualizar(p);
+                javax.swing.JOptionPane.showMessageDialog(
+                        this,
+                        "¡Producto actualizado exitosamente!",
+                        "Sistema Comercial UTIC",
+                        javax.swing.JOptionPane.INFORMATION_MESSAGE
+                );
+            }
+
+            // 5. Refrescar la grilla y regresar el formulario al modo de reposo:
+            cargarTablaDesdeBD();
+            limpiarCampos();
+            habilitarCampos(false);
+            configurarEstadoBotones(false);
+            idProductoSeleccionado = null; // Liberar la selección
+
+        } catch (NumberFormatException ex) {
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Por favor, ingrese un valor numérico válido para el precio.",
+                    "Error de Formato",
+                    javax.swing.JOptionPane.WARNING_MESSAGE
+            );
+        } catch (java.sql.SQLException ex) {
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Error al guardar en PostgreSQL 16:\n" + ex.getMessage(),
+                    "Error de Persistencia",
+                    javax.swing.JOptionPane.ERROR_MESSAGE
+            );
+            ex.printStackTrace();
+        }
     }//GEN-LAST:event_btnGuardarActionPerformed
 
     private void btnCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarActionPerformed
@@ -391,37 +578,149 @@ public class FrmProductos extends javax.swing.JInternalFrame {
 
     private void tblProductosMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblProductosMouseClicked
         // TODO add your handling code here:
-        int fila = tblProductos.getSelectedRow();
-        if (fila != -1) {
-            // 1. Extraer los datos de las columnas de la fila seleccionada:
-            txtCodigo.setText(tblProductos.getValueAt(fila, 0).toString());
-            txtDescripcion.setText(tblProductos.getValueAt(fila, 1).toString());
-            cmbCategoria.setSelectedItem(tblProductos.getValueAt(fila, 2).toString());
-
-            // 2. Extraer precio y sanitizar formato monetario ("12.000 Gs." -> "12000"):
-            String precioStr = tblProductos.getValueAt(fila, 3).toString().replaceAll("[^0-9]", "");
-            txtPrecio.setText(precioStr);
-
-            spnStock.setValue(Integer.parseInt(tblProductos.getValueAt(fila, 4).toString()));
-            cmbIva.setSelectedItem(tblProductos.getValueAt(fila, 5).toString());
-
-            // 3. Habilitar botones de acción para el registro seleccionado:
-            //btnModificar.setEnabled(true);
-            //btnEliminar.setEnabled(true);
-            btnNuevo.setEnabled(false);
+        int filaSeleccionada = tblProductos.getSelectedRow();
+        if (filaSeleccionada == -1) {
+            return;
         }
+
+        // 🎯 1. Recuperar el ID real de PostgreSQL desde la primera columna:
+        idProductoSeleccionado = (Integer) modeloTabla.getValueAt(filaSeleccionada, 0);
+
+        // 🎯 2. Poblar los campos de texto con los datos de la fila:
+        txtCodigo.setText(modeloTabla.getValueAt(filaSeleccionada, 1).toString());
+        txtDescripcion.setText(modeloTabla.getValueAt(filaSeleccionada, 2).toString());
+
+        // Extraer monto numérico sin los caracteres de moneda:
+        String precioStr = modeloTabla.getValueAt(filaSeleccionada, 3).toString()
+                .replace("Gs.", "").replace(".", "").replace(",", "").trim();
+        txtPrecio.setText(precioStr);
+
+        spnStock.setValue(Integer.parseInt(modeloTabla.getValueAt(filaSeleccionada, 4).toString()));
+
+        // 🎯 Manejo inteligente del IVA para que matchee con las opciones del ComboBox:
+        String ivaTablaStr = modeloTabla.getValueAt(filaSeleccionada, 5).toString().replace("%", "").trim();
+        int valorIva = Integer.parseInt(ivaTablaStr);
+
+        if (valorIva == 10) {
+            cmbIva.setSelectedItem("10%");
+        } else if (valorIva == 5) {
+            cmbIva.setSelectedItem("5%");
+        } else {
+            cmbIva.setSelectedItem("Exenta (Ley 6380/19)");
+        }
+
+        String estadoStr = modeloTabla.getValueAt(filaSeleccionada, 6).toString();
+        chkActivo.setSelected("Activo".equalsIgnoreCase(estadoStr));
+
+        // 🎯 3. Activar botones para permitir Modificación o Eliminación:
+        habilitarCampos(false); // Cajas bloqueadas hasta que pulse "Modificar"
+        btnNuevo.setEnabled(false);
+        btnGuardar.setEnabled(false);
+        btnModificar.setEnabled(true);
+        btnEliminar.setEnabled(true);
+        btnCancelar.setEnabled(true);
     }//GEN-LAST:event_tblProductosMouseClicked
+
+    private void btnModificarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnModificarActionPerformed
+        // 1. Validar que se haya seleccionado un registro de la tabla previamente:
+        if (idProductoSeleccionado == null) {
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Por favor, seleccione un producto de la tabla para modificar.",
+                    "Advertencia",
+                    javax.swing.JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        // 2. 🔓 Habilitar los campos para permitir la edición:
+        habilitarCampos(true);
+
+        // Si prefieres que el código no se modifique para mantener la integridad, déjalo en falso:
+        txtCodigo.setEditable(true); // O true si deseas permitir corregir el código tipeado mal
+        txtDescripcion.requestFocus();
+
+        // 3. Cambiar el estado de los botones (Bloquear nuevo/modificar/eliminar, habilitar guardar/cancelar):
+        btnNuevo.setEnabled(false);
+        btnModificar.setEnabled(false);
+        btnEliminar.setEnabled(false);
+        btnGuardar.setEnabled(true);
+        btnCancelar.setEnabled(true);
+    }//GEN-LAST:event_btnModificarActionPerformed
+
+    private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarActionPerformed
+        // TODO add your handling code here:
+        // 1. Validar selección previa:
+        if (idProductoSeleccionado == null) {
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Por favor, seleccione un producto de la tabla para dar de baja.",
+                    "Advertencia",
+                    javax.swing.JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        // 2. Cuadro de diálogo de confirmación de seguridad (UX profesional):
+        int confirmacion = javax.swing.JOptionPane.showConfirmDialog(
+                this,
+                "¿Está seguro de que desea dar de baja (desactivar) este producto?",
+                "Confirmación de Baja",
+                javax.swing.JOptionPane.YES_NO_OPTION,
+                javax.swing.JOptionPane.QUESTION_MESSAGE
+        );
+
+        if (confirmacion == javax.swing.JOptionPane.YES_OPTION) {
+            try {
+                // 3. Ejecutar la baja lógica llamando al método correspondiente de tu DAO:
+                // (Si en tu DAO manejas un método eliminar físico o lógico, asegúrate de invocar el correcto. 
+                // Lo estándar en LP II es actualizar el estado activo a false, o llamar a productoDAO.eliminar(idProductoSeleccionado))
+
+                productoDAO.eliminar(idProductoSeleccionado); // O tu equivalente lógico
+
+                javax.swing.JOptionPane.showMessageDialog(
+                        this,
+                        "¡Producto dado de baja exitosamente!",
+                        "Sistema Comercial UTIC",
+                        javax.swing.JOptionPane.INFORMATION_MESSAGE
+                );
+
+                // 4. Refrescar la grilla y reposicionar el formulario:
+                cargarTablaDesdeBD();
+                limpiarCampos();
+                habilitarCampos(false);
+                configurarEstadoBotones(false);
+                idProductoSeleccionado = null;
+
+            } catch (java.sql.SQLException ex) {
+                javax.swing.JOptionPane.showMessageDialog(
+                        this,
+                        "Error al procesar la baja en PostgreSQL 16:\n" + ex.getMessage(),
+                        "Error de Persistencia",
+                        javax.swing.JOptionPane.ERROR_MESSAGE
+                );
+                ex.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_btnEliminarActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCancelar;
+    private javax.swing.JButton btnEliminar;
     private javax.swing.JButton btnGuardar;
+    private javax.swing.JButton btnModificar;
     private javax.swing.JButton btnNuevo;
     private javax.swing.JButton btnSalir;
     private javax.swing.JCheckBox chkActivo;
     private javax.swing.JComboBox<String> cmbCategoria;
     private javax.swing.JComboBox<String> cmbIva;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel lblCodigo;
+    private javax.swing.JLabel lblDescripcion;
+    private javax.swing.JLabel lblPrecioUnit;
+    private javax.swing.JLabel lblStock;
     private javax.swing.JPanel pnlDatos;
     private javax.swing.JSpinner spnStock;
     private javax.swing.JTable tblProductos;

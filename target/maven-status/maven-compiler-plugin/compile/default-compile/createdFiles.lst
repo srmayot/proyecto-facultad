@@ -3,6 +3,7 @@ py\edu\utic\lpii\dao\DBConnection.class
 py\edu\utic\lpii\view\FrmClientes$4.class
 py\edu\utic\lpii\view\FrmBienvenida.class
 py\edu\utic\lpii\view\FrmProveedores$3.class
+py\edu\utic\lpii\dao\ProductoDAO.class
 py\edu\utic\lpii\model\Cliente.class
 py\edu\utic\lpii\view\FrmProductos.class
 py\edu\utic\lpii\view\FrmProveedores$2.class

@@ -25,21 +25,20 @@ public class Producto {
     // BLOQUE 2: CONSTRUCTORES CON INICIALIZACIÓN SEGURA
     // =========================================================================
     public Producto() {
-        this.precio = BigDecimal.ZERO;
         this.activo = true;
-        this.iva = 10; // Tasa predominante en el comercio minorista paraguayo
+        this.iva = 10;
         this.stock = 0;
+        this.precio = BigDecimal.ZERO;
     }
 
-    public Producto(Integer id, String codigo, String nombre, BigDecimal precio, int stock, int iva, Categoria categoria) {
+    public Producto(Integer id, String codigo, String nombre, BigDecimal precio, Integer stock, Integer iva, boolean activo) {
         this.id = id;
         this.codigo = codigo;
         this.nombre = nombre;
-        this.setPrecio(precio); // Valida que el precio no sea nulo ni negativo
-        this.setStock(stock);   // Valida que el stock sea >= 0
-        this.setIva(iva);       // Valida tasa fiscal paraguaya (0, 5, 10)
-        this.categoria = categoria;
-        this.activo = true;
+        this.precio = precio;
+        this.stock = stock;
+        this.iva = iva;
+        this.activo = activo;
     }
 
     // =========================================================================
