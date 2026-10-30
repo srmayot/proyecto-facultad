@@ -4,7 +4,11 @@
  */
 package py.edu.utic.lpii.view;
 
+import py.edu.utic.lpii.dao.IProveedorDAO;
+import py.edu.utic.lpii.dao.ProveedorDAO;
+import py.edu.utic.lpii.model.Proveedor;
 import py.edu.utic.lpii.util.ValidadorUtil;
+import java.sql.SQLException;
 
 import javax.swing.JOptionPane;
 
@@ -14,12 +18,22 @@ import javax.swing.JOptionPane;
  */
 public class FrmProveedores extends javax.swing.JInternalFrame {
 
+    private final IProveedorDAO proveedorDAO = new ProveedorDAO();
+    private javax.swing.table.DefaultTableModel modeloTabla;
+    private Integer idProveedorSeleccionado = null;
+
     /**
      * Creates new form FrmProveedores
      */
     public FrmProveedores() {
         initComponents();
         inicializarTabla();
+
+        limpiarCampos();
+        habilitarCampos(false);
+        configurarEstadoBotones(false);
+
+        cargarTablaDesdeBD();
     }
 
     /**
@@ -29,16 +43,17 @@ public class FrmProveedores extends javax.swing.JInternalFrame {
      * cambios
      */
     private void habilitarCampos(boolean habilitar) {
-        // El código siempre es autogenerado o gestionado por el sistema:
+        // El código/ID es autogenerado por PostgreSQL, por lo que nunca se edita manualmente:
         txtCodigo.setEditable(false);
+        txtCodigo.setEnabled(false);
 
-        // Controles de entrada de datos:
+        // Controles de entrada de datos del proveedor:
         txtRuc.setEnabled(habilitar);
         txtRazonSocial.setEnabled(habilitar);
         txtContacto.setEnabled(habilitar);
-        txtContacto.setEnabled(habilitar);
+        txtTelefono.setEnabled(habilitar); // 🟢 Agregado que faltaba
         txtEmail.setEnabled(habilitar);
-        txtDireccion.setEnabled(habilitar);
+        txtDireccion.setEnabled(habilitar); // 🟢 Agregado que faltaba
         cboRubro.setEnabled(habilitar);
         chkActivo.setEnabled(habilitar);
     }
@@ -59,7 +74,7 @@ public class FrmProveedores extends javax.swing.JInternalFrame {
 
         // 2. Validar formato y algoritmo matemático Módulo 11 de la SET:
         if (!ValidadorUtil.validarRucParaguay(ruc)) {
-            JOptionPane.showMessageDialog(this, "El RUC ingresado no es válido según el algoritmo Módulo 11 de la DNIT/SET (Ej: 80012345-6).", "RUC Inválido", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "El RUC ingresado no es válido según el algoritmo Módulo 11 de la DNIT/SET (Ej: 80012345-0).", "RUC Inválido", JOptionPane.ERROR_MESSAGE);
             txtRuc.selectAll();
             txtRuc.requestFocus();
             return false;
@@ -135,32 +150,61 @@ public class FrmProveedores extends javax.swing.JInternalFrame {
         btnSalir.setEnabled(true);
     }
 
+    private void cargarTablaDesdeBD() {
+        modeloTabla.setRowCount(0);
+
+        try {
+            java.util.List<py.edu.utic.lpii.model.Proveedor> proveedores = proveedorDAO.listarTodos();
+
+            for (py.edu.utic.lpii.model.Proveedor p : proveedores) {
+                modeloTabla.addRow(new Object[]{
+                    p.getId(), // Columna 0: Código
+                    p.getRuc(), // Columna 1: RUC
+                    p.getRazonSocial(), // Columna 2: Razón Social
+                    p.getContacto(), // Columna 3: Contacto
+                    p.getTelefono(), // Columna 4: Teléfono
+                    p.getRubro(), // Columna 5: Rubro
+                    p.getEmail(), // Columna 6: Correo
+                    p.getDireccion(), // Columna 7: Dirección 🟢
+                    p.isActivo() ? "Activo" : "Inactivo" // Columna 8: Estado
+                });
+            }
+        } catch (java.sql.SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error al leer los proveedores:\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     /**
      * Configura el modelo de datos no editable y el diseño de anchos de columna
      * de tblProveedores
      */
     private void inicializarTabla() {
-        String[] cabeceras = {"Código", "RUC / C.I.", "Razón Social", "Contacto Comercial", "Teléfono", "Rubro"};
+        // Orden exacto de columnas (Indices del 0 al 8)
+        String[] cabeceras = {"Código", "RUC / C.I.", "Razón Social", "Contacto Comercial", "Teléfono", "Rubro", "Correo", "Dirección", "Estado"};
 
-        // 🔒 Modelo de datos con bloqueo de edición directa en celdas:
         javax.swing.table.DefaultTableModel modelo = new javax.swing.table.DefaultTableModel(cabeceras, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Ninguna celda editable con doble clic
+                return false;
             }
         };
 
         tblProveedores.setModel(modelo);
-        tblProveedores.setRowHeight(26); // Altura ergonómica para FlatLaf
+        this.modeloTabla = modelo;
+
+        tblProveedores.setRowHeight(26);
         tblProveedores.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
 
-        // 📐 Configurar anchos proporcionales de columnas:
-        tblProveedores.getColumnModel().getColumn(0).setPreferredWidth(80);   // Código
-        tblProveedores.getColumnModel().getColumn(1).setPreferredWidth(120);  // RUC
-        tblProveedores.getColumnModel().getColumn(2).setPreferredWidth(220);  // Razón Social
-        tblProveedores.getColumnModel().getColumn(3).setPreferredWidth(160);  // Contacto
-        tblProveedores.getColumnModel().getColumn(4).setPreferredWidth(110);  // Teléfono
-        tblProveedores.getColumnModel().getColumn(5).setPreferredWidth(120);  // Rubro
+        // Anchos proporcionales para las 9 columnas:
+        tblProveedores.getColumnModel().getColumn(0).setPreferredWidth(60);   // Código
+        tblProveedores.getColumnModel().getColumn(1).setPreferredWidth(110);  // RUC
+        tblProveedores.getColumnModel().getColumn(2).setPreferredWidth(180);  // Razón Social
+        tblProveedores.getColumnModel().getColumn(3).setPreferredWidth(130);  // Contacto
+        tblProveedores.getColumnModel().getColumn(4).setPreferredWidth(90);   // Teléfono
+        tblProveedores.getColumnModel().getColumn(5).setPreferredWidth(100);  // Rubro
+        tblProveedores.getColumnModel().getColumn(6).setPreferredWidth(140);  // Correo
+        tblProveedores.getColumnModel().getColumn(7).setPreferredWidth(140);  // Dirección
+        tblProveedores.getColumnModel().getColumn(8).setPreferredWidth(80);   // Estado
     }
 
     /**
@@ -186,21 +230,30 @@ public class FrmProveedores extends javax.swing.JInternalFrame {
         tblProveedores = new javax.swing.JTable();
         btnNuevo = new javax.swing.JButton();
         btnGuardar = new javax.swing.JButton();
-        btnCancelar = new javax.swing.JButton();
         btnEliminar = new javax.swing.JButton();
         btnModificar = new javax.swing.JButton();
         btnSalir = new javax.swing.JButton();
+        lblCodigo = new javax.swing.JLabel();
+        lblRuc = new javax.swing.JLabel();
+        lblContacto = new javax.swing.JLabel();
+        lblTelefono = new javax.swing.JLabel();
+        lblDireccion = new javax.swing.JLabel();
+        jLabel1 = new javax.swing.JLabel();
+        lblRazonSocial = new javax.swing.JLabel();
+        btnCancelar = new javax.swing.JButton();
+        lblRubro = new javax.swing.JLabel();
 
         setClosable(true);
         setIconifiable(true);
         setMaximizable(true);
         setResizable(true);
+        setTitle("Mantenimiento de Proveedores");
 
         txtCodigo.setEditable(false);
         txtCodigo.setColumns(10);
 
         txtRuc.setColumns(15);
-        txtRuc.setToolTipText("Ej: 80012345-6");
+        txtRuc.setToolTipText("Ej: 80012345-0");
         txtRuc.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusLost(java.awt.event.FocusEvent evt) {
                 txtRucFocusLost(evt);
@@ -223,9 +276,9 @@ public class FrmProveedores extends javax.swing.JInternalFrame {
 
         txtEmail.setColumns(20);
 
-        chkActivo.setText("jCheckBox1");
+        chkActivo.setText("Activo");
 
-        txtDireccion.setColumns(10);
+        txtDireccion.setColumns(20);
 
         tblProveedores.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -258,17 +311,38 @@ public class FrmProveedores extends javax.swing.JInternalFrame {
         jScrollPane1.setViewportView(tblProveedores);
 
         btnNuevo.setText("Nuevo");
+        btnNuevo.addActionListener(this::btnNuevoActionPerformed);
 
         btnGuardar.setText("Guardar");
-
-        btnCancelar.setText("Cancelar");
+        btnGuardar.addActionListener(this::btnGuardarActionPerformed);
 
         btnEliminar.setText("Eliminar");
+        btnEliminar.addActionListener(this::btnEliminarActionPerformed);
 
         btnModificar.setText("Modificar");
+        btnModificar.addActionListener(this::btnModificarActionPerformed);
 
         btnSalir.setText("Salir");
         btnSalir.addActionListener(this::btnSalirActionPerformed);
+
+        lblCodigo.setText("Código");
+
+        lblRuc.setText("RUC");
+
+        lblContacto.setText("Contacto");
+
+        lblTelefono.setText("Teléfono");
+
+        lblDireccion.setText("Dirección");
+
+        jLabel1.setText("Correo Electrónico");
+
+        lblRazonSocial.setText("Razón Social");
+
+        btnCancelar.setText("Cancelar");
+        btnCancelar.addActionListener(this::btnCancelarActionPerformed);
+
+        lblRubro.setText("Rubro");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -277,72 +351,99 @@ public class FrmProveedores extends javax.swing.JInternalFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(28, 28, 28)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txtContacto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jScrollPane1)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(txtCodigo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(txtRuc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(txtEmail, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(lblCodigo)
+                            .addComponent(lblRazonSocial)
                             .addComponent(txtRazonSocial, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(txtTelefono, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(txtDireccion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(chkActivo)
-                                    .addComponent(cboRubro, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
-                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addGroup(jPanel1Layout.createSequentialGroup()
-                            .addComponent(btnNuevo)
-                            .addGap(18, 18, 18)
-                            .addComponent(btnGuardar)
-                            .addGap(18, 18, 18)
-                            .addComponent(btnModificar)
-                            .addGap(18, 18, 18)
-                            .addComponent(btnEliminar)
-                            .addGap(18, 18, 18)
-                            .addComponent(btnCancelar)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnSalir))
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 766, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(308, Short.MAX_VALUE))
+                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
+                                    .addComponent(btnNuevo)
+                                    .addGap(18, 18, 18)
+                                    .addComponent(btnGuardar)
+                                    .addGap(18, 18, 18)
+                                    .addComponent(btnModificar)
+                                    .addGap(18, 18, 18)
+                                    .addComponent(btnEliminar)
+                                    .addGap(18, 18, 18)
+                                    .addComponent(btnCancelar)
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(btnSalir))
+                                .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
+                                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(txtCodigo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(lblContacto))
+                                    .addGap(163, 163, 163)
+                                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(lblRuc)
+                                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                            .addComponent(txtRuc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addGap(112, 112, 112)
+                                            .addComponent(chkActivo))
+                                        .addComponent(lblTelefono)))
+                                .addGroup(jPanel1Layout.createSequentialGroup()
+                                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(txtContacto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabel1)
+                                        .addComponent(txtEmail, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGap(53, 53, 53)
+                                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(txtDireccion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(lblDireccion)
+                                        .addComponent(txtTelefono, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGap(129, 129, 129)
+                                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(cboRubro, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(lblRubro)))))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(btnNuevo)
-                            .addComponent(btnGuardar)
-                            .addComponent(btnModificar)
-                            .addComponent(btnEliminar)
-                            .addComponent(btnCancelar)))
-                    .addComponent(btnSalir))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnNuevo)
+                    .addComponent(btnGuardar)
+                    .addComponent(btnModificar)
+                    .addComponent(btnEliminar)
+                    .addComponent(btnSalir)
+                    .addComponent(btnCancelar))
+                .addGap(39, 39, 39)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblCodigo)
+                    .addComponent(lblRuc))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtCodigo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txtRuc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtRazonSocial, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(37, 37, 37)
+                    .addComponent(chkActivo))
+                .addGap(25, 25, 25)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(txtContacto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblContacto)
+                    .addComponent(lblTelefono)
+                    .addComponent(lblRubro))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtTelefono, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtContacto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(cboRubro, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(28, 28, 28)
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(lblDireccion))
+                .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtEmail, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtDireccion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(chkActivo))
-                .addGap(47, 47, 47)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 304, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(121, Short.MAX_VALUE))
+                    .addComponent(txtDireccion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(14, 14, 14)
+                .addComponent(lblRazonSocial)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(txtRazonSocial, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 286, Short.MAX_VALUE)
+                .addGap(16, 16, 16))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -350,16 +451,15 @@ public class FrmProveedores extends javax.swing.JInternalFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         pack();
@@ -389,29 +489,47 @@ public class FrmProveedores extends javax.swing.JInternalFrame {
     }//GEN-LAST:event_txtRucKeyTyped
 
     private void tblProveedoresMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblProveedoresMouseClicked
-        // TODO add your handling code here:
         int filaSeleccionada = tblProveedores.getSelectedRow();
 
         if (filaSeleccionada != -1) {
-            // 📥 Extraer los datos de las columnas de la fila seleccionada:
-            String codigo = tblProveedores.getValueAt(filaSeleccionada, 0).toString();
-            String ruc = tblProveedores.getValueAt(filaSeleccionada, 1).toString();
-            String razonSocial = tblProveedores.getValueAt(filaSeleccionada, 2).toString();
-            String contacto = tblProveedores.getValueAt(filaSeleccionada, 3).toString();
-            String telefono = tblProveedores.getValueAt(filaSeleccionada, 4).toString();
-            String rubro = tblProveedores.getValueAt(filaSeleccionada, 5).toString();
+            // 1. Recuperar el ID (Columna 0)
+            idProveedorSeleccionado = (Integer) modeloTabla.getValueAt(filaSeleccionada, 0);
 
-            // 📤 Transferir datos a los campos de edición visuales:
-            txtCodigo.setText(codigo);
+            // 2. Extraer los datos respetando los índices exactos de las columnas
+            String ruc = modeloTabla.getValueAt(filaSeleccionada, 1).toString();
+            String razonSocial = modeloTabla.getValueAt(filaSeleccionada = filaSeleccionada, 2).toString(); // (o simplemente 2)
+            String contacto = modeloTabla.getValueAt(filaSeleccionada, 3).toString();
+            String telefono = modeloTabla.getValueAt(filaSeleccionada, 4).toString();
+            String rubro = modeloTabla.getValueAt(filaSeleccionada, 5).toString();
+
+            Object emailObj = modeloTabla.getValueAt(filaSeleccionada, 6);
+            String email = (emailObj != null) ? emailObj.toString() : "";
+
+            // 🟢 3. Leer la dirección exactamente de la Columna 7
+            Object dirObj = modeloTabla.getValueAt(filaSeleccionada, 7);
+            String direccion = (dirObj != null) ? dirObj.toString() : "";
+
+            String estadoStr = modeloTabla.getValueAt(filaSeleccionada, 8).toString();
+
+            // 4. Pasar los datos a los componentes visuales (incluyendo la dirección)
+            txtCodigo.setText(idProveedorSeleccionado.toString());
             txtRuc.setText(ruc);
             txtRazonSocial.setText(razonSocial);
             txtContacto.setText(contacto);
             txtTelefono.setText(telefono);
             cboRubro.setSelectedItem(rubro);
+            txtEmail.setText(email);
+            txtDireccion.setText(direccion);   // 🟢 Se asigna al cuadro de texto de la dirección
+            chkActivo.setSelected("Activo".equalsIgnoreCase(estadoStr));
 
-            // Mantener campos bloqueados hasta que el usuario presione "Modificar":
+            // 5. Configurar botonera
             habilitarCampos(false);
-            configurarEstadoBotones(false);
+
+            btnModificar.setEnabled(true);
+            btnEliminar.setEnabled(true);
+            btnNuevo.setEnabled(true);
+            btnGuardar.setEnabled(false);
+            btnCancelar.setEnabled(false);
         }
     }//GEN-LAST:event_tblProveedoresMouseClicked
 
@@ -419,6 +537,142 @@ public class FrmProveedores extends javax.swing.JInternalFrame {
         // TODO add your handling code here:
         this.dispose();
     }//GEN-LAST:event_btnSalirActionPerformed
+
+    private void btnGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarActionPerformed
+        // 1. Validar campos integrales (Esto ya evalúa si está vacío y si el Módulo 11 es correcto)
+        if (!validarCampos()) {
+            return;
+        }
+
+        String rucTexto = txtRuc.getText().trim();
+
+        try {
+            Proveedor p = new Proveedor();
+            p.setRuc(rucTexto); // Si la entidad ya valida, pasará directo sin duplicar llamados
+            p.setRazonSocial(txtRazonSocial.getText().trim());
+            p.setContacto(txtContacto.getText().trim());
+            p.setTelefono(txtTelefono.getText().trim());
+            p.setEmail(txtEmail.getText().trim());
+            p.setDireccion(txtDireccion.getText().trim());
+            p.setRubro(cboRubro.getSelectedItem().toString());
+            p.setActivo(chkActivo.isSelected());
+
+            if (idProveedorSeleccionado == null) {
+                proveedorDAO.insertar(p);
+                JOptionPane.showMessageDialog(this, "Proveedor registrado con ID #" + p.getId(), "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                p.setId(idProveedorSeleccionado);
+                proveedorDAO.actualizar(p);
+                JOptionPane.showMessageDialog(this, "Proveedor #" + p.getId() + " actualizado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            }
+
+            cargarTablaDesdeBD();
+            limpiarCampos();
+            habilitarCampos(false);
+            configurarEstadoBotones(false);
+            idProveedorSeleccionado = null;
+
+        } catch (SQLException ex) {
+            if ("23505".equals(ex.getSQLState())) {
+                JOptionPane.showMessageDialog(this, "El RUC '" + rucTexto + "' ya existe para otro proveedor.", "RUC Duplicado", JOptionPane.WARNING_MESSAGE);
+                txtRuc.requestFocus();
+            } else {
+                JOptionPane.showMessageDialog(this, "Error SQL:\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (IllegalArgumentException ex) {
+            // Captura cualquier error de validación lanzado por los setters de la entidad Proveedor
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de Validación", JOptionPane.WARNING_MESSAGE);
+            txtRuc.requestFocus();
+        }
+    }//GEN-LAST:event_btnGuardarActionPerformed
+
+    private void btnNuevoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNuevoActionPerformed
+        // TODO add your handling code here:
+        limpiarCampos();
+        habilitarCampos(true);          // Habilita las cajas de texto
+        configurarEstadoBotones(true);   // Activa Guardar y Cancelar, bloquea Nuevo/Modificar/Eliminar
+        idProveedorSeleccionado = null;  // Limpiamos el ID porque es un registro nuevo
+        txtRuc.requestFocus();           // Pone el cursor listo para escribir el RUC
+    }//GEN-LAST:event_btnNuevoActionPerformed
+
+    private void btnModificarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnModificarActionPerformed
+        // TODO add your handling code here:
+        if (idProveedorSeleccionado == null) {
+            JOptionPane.showMessageDialog(this, "Debe seleccionar un proveedor de la tabla para modificar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        habilitarCampos(true);          // Habilita los campos para edición
+        configurarEstadoBotones(true);   // Cambia la botonera al modo edición/guardar
+        txtRuc.requestFocus();
+    }//GEN-LAST:event_btnModificarActionPerformed
+
+    private void btnCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarActionPerformed
+        // TODO add your handling code here:
+        limpiarCampos();
+        habilitarCampos(false);          // Bloquea los campos nuevamente
+        configurarEstadoBotones(false);  // Restaura la botonera por defecto
+        idProveedorSeleccionado = null;
+    }//GEN-LAST:event_btnCancelarActionPerformed
+
+    private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarActionPerformed
+        // TODO add your handling code here:
+        // 1. Validar que realmente se haya seleccionado un proveedor de la tabla
+        if (idProveedorSeleccionado == null) {
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Por favor, seleccione un proveedor de la tabla para eliminar.",
+                    "Aviso",
+                    javax.swing.JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        // 2. Pedir confirmación antes de proceder a la baja lógica
+        int confirmacion = javax.swing.JOptionPane.showConfirmDialog(
+                this,
+                "¿Está seguro de que desea eliminar (dar de baja) al proveedor seleccionado?",
+                "Confirmar Eliminación",
+                javax.swing.JOptionPane.YES_NO_OPTION,
+                javax.swing.JOptionPane.QUESTION_MESSAGE
+        );
+
+        if (confirmacion == javax.swing.JOptionPane.YES_OPTION) {
+            try {
+                // 3. Ejecutar la baja lógica usando el DAO que ya creamos
+                proveedorDAO.eliminar(idProveedorSeleccionado);
+
+                javax.swing.JOptionPane.showMessageDialog(
+                        this,
+                        "Proveedor eliminado correctamente.",
+                        "Éxito",
+                        javax.swing.JOptionPane.INFORMATION_MESSAGE
+                );
+
+                // 4. Refrescar la tabla y limpiar el formulario
+                cargarTablaDesdeBD();
+                limpiarCampos();
+                habilitarCampos(false);
+
+                // Desactivar botones de edición hasta una nueva selección
+                btnModificar.setEnabled(false);
+                btnEliminar.setEnabled(false);
+                btnNuevo.setEnabled(true);
+                btnGuardar.setEnabled(false);
+                btnCancelar.setEnabled(false);
+
+                idProveedorSeleccionado = null;
+
+            } catch (java.sql.SQLException ex) {
+                javax.swing.JOptionPane.showMessageDialog(
+                        this,
+                        "Error al intentar eliminar el proveedor:\n" + ex.getMessage(),
+                        "Error de Base de Datos",
+                        javax.swing.JOptionPane.ERROR_MESSAGE
+                );
+                ex.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_btnEliminarActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -430,8 +684,16 @@ public class FrmProveedores extends javax.swing.JInternalFrame {
     private javax.swing.JButton btnSalir;
     private javax.swing.JComboBox<String> cboRubro;
     private javax.swing.JCheckBox chkActivo;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel lblCodigo;
+    private javax.swing.JLabel lblContacto;
+    private javax.swing.JLabel lblDireccion;
+    private javax.swing.JLabel lblRazonSocial;
+    private javax.swing.JLabel lblRubro;
+    private javax.swing.JLabel lblRuc;
+    private javax.swing.JLabel lblTelefono;
     private javax.swing.JTable tblProveedores;
     private javax.swing.JTextField txtCodigo;
     private javax.swing.JTextField txtContacto;

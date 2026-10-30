@@ -4,26 +4,60 @@
  */
 package py.edu.utic.lpii.view;
 
+import java.sql.SQLException;
+import java.util.List;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
+import py.edu.utic.lpii.dao.ClienteDAO;
+import py.edu.utic.lpii.dao.IClienteDAO;
+import py.edu.utic.lpii.model.Cliente;
+
 /**
  *
  * @author smayot
  */
 public class FrmClientes extends javax.swing.JInternalFrame {
-    
-    private javax.swing.table.TableRowSorter<javax.swing.table.DefaultTableModel> sorter;
+// 🎯 Declaración de variables globales de la clase (¡Esto evita los subrayados rojos!)
 
-    /**
-     * Creates new form FrmClientes
-     */
+    private final IClienteDAO clienteDAO;
+    private Integer idClienteSeleccionado = null;
+    private DefaultTableModel modeloTabla;
+    private TableRowSorter<DefaultTableModel> sorter;
+
     public FrmClientes() {
         initComponents();
-        txtRuc.putClientProperty("JTextField.placeholderText", "Ej: 80015698-3");
-        // 🟢 Configuración de arranque del módulo de clientes:
-        this.setTitle("Gestión y Registro de Clientes");
+        this.setTitle("Mantenimiento y Control de Clientes (PostgreSQL 16)");
+
+        // 🚀 Inicialización de persistencia:
+        this.clienteDAO = new ClienteDAO();
+
         inicializarTabla();
+        cargarTablaDesdeBD(); // Carga de clientes desde PostgreSQL
         limpiarCampos();
         habilitarCampos(false);
         configurarEstadoBotones(false);
+    }
+
+    private void cargarTablaDesdeBD() {
+        modeloTabla.setRowCount(0); // Limpiar filas anteriores
+        try {
+            List<Cliente> clientes = clienteDAO.listarTodos();
+            for (Cliente c : clientes) {
+                modeloTabla.addRow(new Object[]{
+                    c.getId(),
+                    c.getRuc(),
+                    c.getRazonSocial(),
+                    c.getTelefono() != null ? c.getTelefono() : "-",
+                    c.getDireccion() != null ? c.getDireccion() : "-",
+                    c.getTipo(),
+                    c.isActivo() ? "Activo" : "Inactivo"
+                });
+            }
+            //lblTotalRegistros.setText("Total de clientes en base de datos: " + clientes.size());
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error al consultar clientes en PostgreSQL:\n" + ex.getMessage(), "Error SQL", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /**
@@ -93,19 +127,19 @@ public class FrmClientes extends javax.swing.JInternalFrame {
      */
     private void inicializarTabla() {
         String[] titulos = {
-            "Código", "RUC / Cédula", "Razón Social / Nombre", "Teléfono", "Tipo", "Estado"
+            "Código", "RUC / Cédula", "Razón Social / Nombre", "Teléfono", "Dirección", "Tipo", "Estado"
         };
 
-        javax.swing.table.DefaultTableModel modelo = new javax.swing.table.DefaultTableModel(titulos, 0) {
+        modeloTabla = new javax.swing.table.DefaultTableModel(titulos, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
 
-        tblClientes.setModel(modelo);
+        tblClientes.setModel(modeloTabla);
 
-        sorter = new javax.swing.table.TableRowSorter<>(modelo);
+        sorter = new javax.swing.table.TableRowSorter<>(modeloTabla);
         tblClientes.setRowSorter(sorter);
 
         tblClientes.getColumnModel().getColumn(0).setPreferredWidth(75);
@@ -114,6 +148,7 @@ public class FrmClientes extends javax.swing.JInternalFrame {
         tblClientes.getColumnModel().getColumn(3).setPreferredWidth(100);
         tblClientes.getColumnModel().getColumn(4).setPreferredWidth(90);
         tblClientes.getColumnModel().getColumn(5).setPreferredWidth(75);
+        tblClientes.getColumnModel().getColumn(6).setPreferredWidth(75);
     }
 
     private void limpiarCampos() {
@@ -191,12 +226,13 @@ public class FrmClientes extends javax.swing.JInternalFrame {
         btnNuevo = new javax.swing.JButton();
         btnGuardar = new javax.swing.JButton();
         btnCancelar = new javax.swing.JButton();
-        btnSalir = new javax.swing.JButton();
         lblRuc = new javax.swing.JLabel();
         lblCodigo = new javax.swing.JLabel();
         lblTelefono = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
         lblDireccion = new javax.swing.JLabel();
+        btnSalir = new javax.swing.JButton();
+        btnSimularError = new javax.swing.JButton();
 
         setClosable(true);
         setMaximizable(true);
@@ -269,6 +305,7 @@ public class FrmClientes extends javax.swing.JInternalFrame {
         chkActivo.setText("Activo");
 
         btnModificar.setText("Modificar");
+        btnModificar.addActionListener(this::btnModificarActionPerformed);
 
         btnEliminar.setText("Eliminar");
 
@@ -281,9 +318,6 @@ public class FrmClientes extends javax.swing.JInternalFrame {
         btnCancelar.setText("Cancelar");
         btnCancelar.addActionListener(this::btnCancelarActionPerformed);
 
-        btnSalir.setText("Salir");
-        btnSalir.addActionListener(this::btnSalirActionPerformed);
-
         lblRuc.setText("RUC");
 
         lblCodigo.setText("Codigo");
@@ -294,32 +328,22 @@ public class FrmClientes extends javax.swing.JInternalFrame {
 
         lblDireccion.setText("Dirección");
 
+        btnSalir.setText("Salir");
+        btnSalir.addActionListener(this::btnSalirActionPerformed);
+
+        btnSimularError.setText("Simular Error 23505 (RUC Duplicado)");
+        btnSimularError.setToolTipText("");
+        btnSimularError.addActionListener(this::btnSimularErrorActionPerformed);
+
         javax.swing.GroupLayout pnlClientesLayout = new javax.swing.GroupLayout(pnlClientes);
         pnlClientes.setLayout(pnlClientesLayout);
         pnlClientesLayout.setHorizontalGroup(
             pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(pnlClientesLayout.createSequentialGroup()
                 .addGroup(pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(pnlClientesLayout.createSequentialGroup()
-                        .addGap(61, 61, 61)
-                        .addComponent(cboTipoCliente, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(91, 91, 91)
-                        .addComponent(chkActivo)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(pnlClientesLayout.createSequentialGroup()
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlClientesLayout.createSequentialGroup()
                         .addGap(34, 34, 34)
                         .addGroup(pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(pnlClientesLayout.createSequentialGroup()
-                                .addGap(0, 0, Short.MAX_VALUE)
-                                .addComponent(btnNuevo)
-                                .addGap(18, 18, 18)
-                                .addComponent(btnGuardar)
-                                .addGap(18, 18, 18)
-                                .addComponent(btnEliminar)
-                                .addGap(18, 18, 18)
-                                .addComponent(btnModificar)
-                                .addGap(18, 18, 18)
-                                .addComponent(btnCancelar))
                             .addGroup(pnlClientesLayout.createSequentialGroup()
                                 .addGroup(pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                                     .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.LEADING)
@@ -338,32 +362,57 @@ public class FrmClientes extends javax.swing.JInternalFrame {
                                         .addGroup(pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                             .addComponent(txtDireccion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                             .addComponent(txtRazonSocial, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                        .addGap(0, 45, Short.MAX_VALUE))))
+                                        .addGap(0, 0, Short.MAX_VALUE))))
                             .addGroup(javax.swing.GroupLayout.Alignment.LEADING, pnlClientesLayout.createSequentialGroup()
                                 .addComponent(lblTelefono)
                                 .addGap(18, 18, 18)
                                 .addComponent(txtTelefono, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 0, Short.MAX_VALUE)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 105, Short.MAX_VALUE)
-                        .addComponent(btnSalir)))
-                .addContainerGap())
+                                .addGap(0, 0, Short.MAX_VALUE))))
+                    .addGroup(pnlClientesLayout.createSequentialGroup()
+                        .addGroup(pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(pnlClientesLayout.createSequentialGroup()
+                                .addGap(61, 61, 61)
+                                .addComponent(cboTipoCliente, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(91, 91, 91)
+                                .addComponent(chkActivo))
+                            .addGroup(pnlClientesLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(btnNuevo)
+                                .addGap(18, 18, 18)
+                                .addComponent(btnGuardar)
+                                .addGap(18, 18, 18)
+                                .addComponent(btnEliminar)
+                                .addGap(18, 18, 18)
+                                .addComponent(btnModificar)
+                                .addGap(18, 18, 18)
+                                .addComponent(btnCancelar)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addGap(79, 79, 79)
+                .addGroup(pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(btnSalir)
+                    .addComponent(btnSimularError))
+                .addGap(29, 29, 29))
         );
         pnlClientesLayout.setVerticalGroup(
             pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(pnlClientesLayout.createSequentialGroup()
-                .addGroup(pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnModificar)
-                    .addComponent(btnEliminar)
-                    .addComponent(btnNuevo)
-                    .addComponent(btnGuardar)
-                    .addComponent(btnCancelar)
-                    .addComponent(btnSalir))
-                .addGap(18, 18, 18)
-                .addGroup(pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(txtRuc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblRuc)
-                    .addComponent(lblCodigo)
-                    .addComponent(txtCodigo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(btnNuevo)
+                        .addComponent(btnGuardar)
+                        .addComponent(btnEliminar)
+                        .addComponent(btnModificar)
+                        .addComponent(btnCancelar))
+                    .addGroup(pnlClientesLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(btnSalir)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(lblCodigo, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(txtRuc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(lblRuc)
+                        .addComponent(txtCodigo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(18, 18, 18)
                 .addGroup(pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtTelefono, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -372,11 +421,17 @@ public class FrmClientes extends javax.swing.JInternalFrame {
                 .addGroup(pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtRazonSocial, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1))
-                .addGap(18, 18, 18)
-                .addGroup(pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(txtDireccion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblDireccion))
-                .addGap(18, 18, 18)
+                .addGroup(pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(pnlClientesLayout.createSequentialGroup()
+                        .addGap(18, 18, 18)
+                        .addGroup(pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(txtDireccion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(lblDireccion))
+                        .addGap(18, 18, 18))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlClientesLayout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnSimularError)
+                        .addGap(34, 34, 34)))
                 .addGroup(pnlClientesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(cboTipoCliente, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(chkActivo, javax.swing.GroupLayout.Alignment.TRAILING))
@@ -392,15 +447,15 @@ public class FrmClientes extends javax.swing.JInternalFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                     .addComponent(jScrollPane1)
                     .addComponent(pnlClientes, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(12, Short.MAX_VALUE))
+                .addContainerGap(65, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(pnlClientes, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(29, 29, 29)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 203, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(35, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 214, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(37, Short.MAX_VALUE))
         );
 
         pack();
@@ -416,32 +471,72 @@ public class FrmClientes extends javax.swing.JInternalFrame {
     }//GEN-LAST:event_btnNuevoActionPerformed
 
     private void btnGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarActionPerformed
-        // TODO add your handling code here:
         // 1. Validar reglas de negocio y formato de RUC:
         if (!validarCampos()) {
             return; // Interrumpe el flujo si falló alguna regla
         }
 
-        // 2. Extraer datos sanitizados:
-        String cod = txtCodigo.getText().trim();
-        String ruc = txtRuc.getText().trim();
-        String razonSocial = txtRazonSocial.getText().trim();
-        String telefono = txtTelefono.getText().trim();
-        String direccion = txtDireccion.getText().trim();
-        String tipo = cboTipoCliente.getSelectedItem().toString();
-        boolean activo = chkActivo.isSelected();
+        try {
+            // 2. Extraer datos sanitizados de la interfaz:
+            String ruc = txtRuc.getText().trim();
+            String razonSocial = txtRazonSocial.getText().trim();
+            String telefono = txtTelefono.getText().trim();
+            String direccion = txtDireccion.getText().trim();
+            String tipo = cboTipoCliente.getSelectedItem().toString();
+            boolean activo = chkActivo.isSelected();
 
-        // 3. Notificación de éxito:
-        javax.swing.JOptionPane.showMessageDialog(this,
-                "¡Cliente [" + razonSocial + "] registrado con éxito!\nRUC Validado: " + ruc,
-                "Sistema Comercial UTIC",
-                javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            // 3. Evaluar si es una INSERCIÓN (Nuevo) o una ACTUALIZACIÓN (Modificar)
+            if (idClienteSeleccionado == null) {
+                // Nuevo cliente
+                Cliente nuevoCliente = new Cliente();
+                nuevoCliente.setRuc(ruc);
+                nuevoCliente.setRazonSocial(razonSocial);
+                nuevoCliente.setTelefono(telefono.isEmpty() ? null : telefono);
+                nuevoCliente.setDireccion(direccion.isEmpty() ? null : direccion);
+                nuevoCliente.setTipo(tipo);
+                nuevoCliente.setActivo(activo);
 
-        // 4. Regresar a modo de reposo:
-        limpiarCampos();
-        habilitarCampos(false);
-        configurarEstadoBotones(false);
+                clienteDAO.insertar(nuevoCliente);
 
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "¡Cliente [" + razonSocial + "] registrado con éxito en PostgreSQL!",
+                        "Sistema Comercial UTIC",
+                        javax.swing.JOptionPane.INFORMATION_MESSAGE);
+
+            } else {
+                // Actualizar cliente existente
+                Cliente clienteExistente = clienteDAO.buscarPorId(idClienteSeleccionado);
+                if (clienteExistente != null) {
+                    clienteExistente.setRuc(ruc);
+                    clienteExistente.setRazonSocial(razonSocial);
+                    clienteExistente.setTelefono(telefono.isEmpty() ? null : telefono);
+                    clienteExistente.setDireccion(direccion.isEmpty() ? null : direccion);
+                    clienteExistente.setTipo(tipo);
+                    clienteExistente.setActivo(activo);
+
+                    clienteDAO.actualizar(clienteExistente);
+
+                    javax.swing.JOptionPane.showMessageDialog(this,
+                            "¡Cliente [" + razonSocial + "] actualizado correctamente!",
+                            "Sistema Comercial UTIC",
+                            javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                }
+            }
+
+            // 4. Refrescar la tabla, limpiar campos y regresar a reposo
+            cargarTablaDesdeBD();
+            limpiarCampos();
+            habilitarCampos(false);
+            configurarEstadoBotones(false);
+            idClienteSeleccionado = null; // Reiniciar estado
+
+        } catch (java.sql.SQLException ex) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Error de base de datos al guardar el cliente:\n" + ex.getMessage(),
+                    "Error SQL",
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
     }//GEN-LAST:event_btnGuardarActionPerformed
 
     private void btnCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarActionPerformed
@@ -457,28 +552,72 @@ public class FrmClientes extends javax.swing.JInternalFrame {
     }//GEN-LAST:event_btnSalirActionPerformed
 
     private void tblClientesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblClientesMouseClicked
-        // TODO add your handling code here:
         int fila = tblClientes.getSelectedRow();
         if (fila != -1) {
-            // Si hay un sorter activo, convertir el índice visual al índice del modelo:
+            // Convertir el índice visual al índice del modelo (por si se usa el buscador Sorter)
             int filaModelo = tblClientes.convertRowIndexToModel(fila);
 
-            txtCodigo.setText(tblClientes.getModel().getValueAt(filaModelo, 0).toString());
-            txtRuc.setText(tblClientes.getModel().getValueAt(filaModelo, 1).toString());
-            txtRazonSocial.setText(tblClientes.getModel().getValueAt(filaModelo, 2).toString());
-            txtTelefono.setText(tblClientes.getModel().getValueAt(filaModelo, 3).toString());
-            cboTipoCliente.setSelectedItem(tblClientes.getModel().getValueAt(filaModelo, 4).toString());
+            // Obtener el ID de la columna 0
+            idClienteSeleccionado = (Integer) tblClientes.getModel().getValueAt(filaModelo, 0);
 
-            // Habilitar botones de acción para modificar o eliminar:
+            // Consultar directamente el objeto completo de la BD para asegurar la Dirección y otros campos
+            try {
+                Cliente c = clienteDAO.buscarPorId(idClienteSeleccionado);
+                if (c != null) {
+                    txtCodigo.setText(c.getId().toString());
+                    txtRuc.setText(c.getRuc());
+                    txtRazonSocial.setText(c.getRazonSocial());
+                    txtTelefono.setText(c.getTelefono() != null ? c.getTelefono() : "");
+                    txtDireccion.setText(c.getDireccion() != null ? c.getDireccion() : "");
+                    cboTipoCliente.setSelectedItem(c.getTipo());
+                    chkActivo.setSelected(c.isActivo());
+                }
+            } catch (SQLException ex) {
+                javax.swing.JOptionPane.showMessageDialog(this, "Error al recuperar datos del cliente: " + ex.getMessage());
+            }
+
+            // Habilitar botones de acción para modificar o eliminar
             btnModificar.setEnabled(true);
             btnEliminar.setEnabled(true);
-            btnNuevo.setEnabled(false);
+            btnNuevo.setEnabled(true);
+            btnGuardar.setEnabled(false);
+            btnCancelar.setEnabled(true);
+            habilitarCampos(false);
         }
     }//GEN-LAST:event_tblClientesMouseClicked
 
     private void pnlClientesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_pnlClientesMouseClicked
         // TODO add your handling code here:
     }//GEN-LAST:event_pnlClientesMouseClicked
+
+    private void btnModificarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnModificarActionPerformed
+        if (idClienteSeleccionado == null) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Por favor, seleccione un cliente de la tabla para modificar.",
+                    "Aviso",
+                    javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Habilitar campos para edición
+        habilitarCampos(true);
+        configurarEstadoBotones(
+                true);
+        txtRuc.requestFocus();
+    }//GEN-LAST:event_btnModificarActionPerformed
+
+    private void btnSimularErrorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSimularErrorActionPerformed
+        // 1. Autocompletamos con un RUC que ya existe en tu base de datos para forzar el choque
+        txtRuc.setText("80015698-3"); // Coloca aquí un RUC que ya hayas guardado antes
+        txtRazonSocial.setText("Cliente Duplicado Prueba");
+        txtTelefono.setText("021123456");
+        txtDireccion.setText("Av. Eusebio Ayala");
+        cboTipoCliente.setSelectedItem("Jurídica");
+        chkActivo.setSelected(true);
+
+        // 2. Opcional: Puedes llamar directamente al método de guardar para que el error salte al instante
+        btnGuardarActionPerformed(evt);
+    }//GEN-LAST:event_btnSimularErrorActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -488,6 +627,7 @@ public class FrmClientes extends javax.swing.JInternalFrame {
     private javax.swing.JButton btnModificar;
     private javax.swing.JButton btnNuevo;
     private javax.swing.JButton btnSalir;
+    private javax.swing.JButton btnSimularError;
     private javax.swing.JComboBox<String> cboTipoCliente;
     private javax.swing.JCheckBox chkActivo;
     private javax.swing.JLabel jLabel1;

@@ -11,7 +11,6 @@ import javax.swing.JInternalFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-
 /**
  * VENTANA PRINCIPAL DEL SISTEMA (PATRÓN MDI)
  *
@@ -21,13 +20,9 @@ public class FrmPrincipal extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmPrincipal.class.getName());
 
-    private FrmProductos ventanaProductos;
-    private FrmClientes ventanaClientes;
-    private FrmProveedores frmProveedores = null;
-
     public FrmPrincipal() {
         initComponents();
-        
+
         // Configuraciones personalizadas agregadas por el desarrollador:
         configurarVentana();
 
@@ -57,6 +52,7 @@ public class FrmPrincipal extends javax.swing.JFrame {
         itemProductos = new javax.swing.JMenuItem();
         itemClientes = new javax.swing.JMenuItem();
         itemProveedores = new javax.swing.JMenuItem();
+        itemVentas = new javax.swing.JMenuItem();
         movimientos = new javax.swing.JMenu();
         reportes = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
@@ -111,12 +107,12 @@ public class FrmPrincipal extends javax.swing.JFrame {
             desktopPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(desktopPaneLayout.createSequentialGroup()
                 .addComponent(pnlStatusBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 172, Short.MAX_VALUE))
+                .addGap(0, 342, Short.MAX_VALUE))
         );
         desktopPaneLayout.setVerticalGroup(
             desktopPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, desktopPaneLayout.createSequentialGroup()
-                .addGap(0, 247, Short.MAX_VALUE)
+                .addGap(0, 597, Short.MAX_VALUE)
                 .addComponent(pnlStatusBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
@@ -149,6 +145,10 @@ public class FrmPrincipal extends javax.swing.JFrame {
         itemProveedores.setText("Proveedores");
         itemProveedores.addActionListener(this::itemProveedoresActionPerformed);
         mantenimiento.add(itemProveedores);
+
+        itemVentas.setText("Ventas");
+        itemVentas.addActionListener(this::itemVentasActionPerformed);
+        mantenimiento.add(itemVentas);
 
         MenuBar.add(mantenimiento);
 
@@ -241,28 +241,7 @@ public class FrmPrincipal extends javax.swing.JFrame {
 
 
     private void itemClientesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemClientesActionPerformed
-        // TODO add your handling code here:
-        // 1. Control de Instancia Única: verificar si no existe o fue cerrada con la 'X'
-        if (ventanaClientes == null || ventanaClientes.isClosed()) {
-            ventanaClientes = new FrmClientes();
-            desktopPane.add(ventanaClientes);
-
-            // 2. Centrado Geométrico milimétrico dentro del área de trabajo del JDesktopPane:
-            int x = (desktopPane.getWidth() - ventanaClientes.getWidth()) / 2;
-            int y = (desktopPane.getHeight() - ventanaClientes.getHeight()) / 2;
-            ventanaClientes.setLocation(Math.max(0, x), Math.max(0, y));
-
-            // 3. Hacer visible el formulario en el escritorio:
-            ventanaClientes.setVisible(true);
-        } else {
-            // 4. Si ya estaba abierta, restaurarla al frente y darle foco:
-            ventanaClientes.toFront();
-            try {
-                ventanaClientes.setSelected(true);
-            } catch (java.beans.PropertyVetoException e) {
-                System.err.println("No se pudo seleccionar la ventana: " + e.getMessage());
-            }
-        }
+            abrirUnico(FrmClientes.class, FrmClientes::new);
     }//GEN-LAST:event_itemClientesActionPerformed
 
     private void itemSalirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemSalirActionPerformed
@@ -271,30 +250,7 @@ public class FrmPrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_itemSalirActionPerformed
 
     private void itemProductosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemProductosActionPerformed
-        // TODO add your handling code here:
-        // 1. Control de Instancia Única: verificar si no existe o fue cerrada con la 'X'
-        // TODO add your handling code here:
-        // 1. Control de Instancia Única: verificar si no existe o fue cerrada con la 'X'
-        if (ventanaProductos == null || ventanaProductos.isClosed()) {
-            ventanaProductos = new FrmProductos();
-            desktopPane.add(ventanaProductos); // <-- Aquí cambiamos jDesktopPane por desktopPane
-
-            // 2. Centrado Geométrico milimétrico dentro del área de trabajo del JDesktopPane:
-            int x = (desktopPane.getWidth() - ventanaProductos.getWidth()) / 2; // <-- Aquí también
-            int y = (desktopPane.getHeight() - ventanaProductos.getHeight()) / 2; // <-- Y aquí
-            ventanaProductos.setLocation(Math.max(0, x), Math.max(0, y));
-
-            // 3. Hacer visible el formulario en el escritorio:
-            ventanaProductos.setVisible(true);
-        } else {
-            // 4. Si ya estaba abierta, restaurarla al frente y darle foco:
-            ventanaProductos.toFront();
-            try {
-                ventanaProductos.setSelected(true);
-            } catch (java.beans.PropertyVetoException e) {
-                System.err.println("No se pudo seleccionar la ventana: " + e.getMessage());
-            }
-        }
+            abrirUnico(FrmProductos.class, FrmProductos::new);
     }//GEN-LAST:event_itemProductosActionPerformed
 
     private void itemTemaOscuroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemTemaOscuroActionPerformed
@@ -321,28 +277,7 @@ public class FrmPrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_mantenimientoActionPerformed
 
     private void itemProveedoresActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemProveedoresActionPerformed
-        // TODO add your handling code here:
-        try {
-            // 1. Verificar si la ventana no existe o fue cerrada para instanciarla:
-            if (frmProveedores == null || frmProveedores.isClosed()) {
-                frmProveedores = new FrmProveedores();
-                desktopPane.add(frmProveedores);
-
-                // 2. Centrado geométrico dinámico dentro del JDesktopPane:
-                int x = (desktopPane.getWidth() - frmProveedores.getWidth()) / 2;
-                int y = (desktopPane.getHeight() - frmProveedores.getHeight()) / 2;
-                frmProveedores.setLocation(x, y);
-
-                frmProveedores.setVisible(true);
-            } else {
-                // 3. Si ya está abierta, traer al frente y restaurar si estaba minimizada:
-                frmProveedores.toFront();
-                frmProveedores.setSelected(true);
-            }
-        } catch (java.beans.PropertyVetoException ex) {
-            System.err.println("Error al enfocar FrmProveedores: " + ex.getMessage());
-        }
-
+        abrirUnico(FrmProveedores.class, FrmProveedores::new);
     }//GEN-LAST:event_itemProveedoresActionPerformed
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
@@ -361,41 +296,58 @@ public class FrmPrincipal extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_jMenuItem4ActionPerformed
 
+    private void itemVentasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemVentasActionPerformed
+        // TODO add your handling code here:
+         abrirUnico(FrmFacturaVenta.class, FrmFacturaVenta::new);
+    }//GEN-LAST:event_itemVentasActionPerformed
+
     public void abrirFormularioCentrado(JInternalFrame formulario) {
         if (formulario == null || desktopPane == null) {
             return;
         }
+        abrirUnico(formulario.getClass(), () -> formulario);
+    }
 
-        for (JInternalFrame frameExistente : desktopPane.getAllFrames()) {
-            if (frameExistente.getClass().equals(formulario.getClass())) {
+    public <T extends JInternalFrame> void abrirUnico(Class<?> clase, java.util.function.Supplier<T> fabrica) {
+        // Si ya hay una ventana de esa clase, solo se trae al frente
+        for (JInternalFrame f : desktopPane.getAllFrames()) {
+            if (f.getClass().equals(clase)) {
                 try {
-                    if (frameExistente.isIcon()) {
-                        frameExistente.setIcon(false);
+                    if (f.isIcon()) {
+                        f.setIcon(false);
                     }
-                    frameExistente.setSelected(true);
-                    frameExistente.toFront();
-                } catch (Exception ex) {
-                    System.err.println("No se pudo enfocar la ventana: " + ex.getMessage());
+                    f.setSelected(true);
+                    f.toFront();
+                } catch (java.beans.PropertyVetoException ignored) {
                 }
                 return;
             }
         }
 
-        desktopPane.add(formulario);
-        int x = (desktopPane.getWidth() - formulario.getWidth()) / 2;
-        int y = (desktopPane.getHeight() - formulario.getHeight()) / 2;
-        formulario.setLocation(Math.max(0, x), Math.max(0, y));
-        formulario.setVisible(true);
+        JInternalFrame nuevo;
         try {
-            formulario.setSelected(true);
-        } catch (Exception ex) {
+            nuevo = fabrica.get();
+        } catch (Throwable ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "No se pudo abrir la ventana:\n" + ex, "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        desktopPane.add(nuevo);
+        int x = (desktopPane.getWidth() - nuevo.getWidth()) / 2;
+        int y = (desktopPane.getHeight() - nuevo.getHeight()) / 2;
+        nuevo.setLocation(Math.max(0, x), Math.max(0, y));
+        nuevo.setVisible(true);
+        try {
+            nuevo.setSelected(true);
+        } catch (java.beans.PropertyVetoException ignored) {
         }
     }
-    
-private void abrirReporteClientes() {
+
+    private void abrirReporteClientes() {
         // Obtenemos la conexión activa mediante el Singleton de DBConnection
-        java.sql.Connection con = py.edu.utic.lpii.dao.DBConnection.getInstance().getConnection(); 
-        
+        java.sql.Connection con = py.edu.utic.lpii.dao.DBConnection.getInstance().getConnection();
+
         // Llamamos al visor pasando la ruta del reporte compilado
         ReporteUtil.mostrarReporte("/reportes/rptClientes.jasper", con);
     }
@@ -510,6 +462,7 @@ private void abrirReporteClientes() {
     private javax.swing.JMenuItem itemSalir;
     private javax.swing.JMenuItem itemTemaClaro;
     private javax.swing.JMenuItem itemTemaOscuro;
+    private javax.swing.JMenuItem itemVentas;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JMenuItem jMenuItem3;

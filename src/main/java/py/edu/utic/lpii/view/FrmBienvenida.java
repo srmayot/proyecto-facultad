@@ -8,15 +8,12 @@ import javax.swing.JOptionPane;
 
 /**
  * VENTANA INTERNA HIJA DE BIENVENIDA (JINTERNALFRAME)
- * 
- * Capa de Presentación (View):
- * Creada en NetBeans con: New > JInternalFrame Form...
- * En la ventana Properties se activan las 4 casillas MDI fundamentales:
- * - closable = true
- * - iconifiable = true
- * - maximizable = true
- * - resizable = true
- * 
+ *
+ * Capa de Presentación (View): Creada en NetBeans con: New > JInternalFrame
+ * Form... En la ventana Properties se activan las 4 casillas MDI fundamentales:
+ * - closable = true - iconifiable = true - maximizable = true - resizable =
+ * true
+ *
  * @author srmayot
  */
 public class FrmBienvenida extends javax.swing.JInternalFrame {
@@ -45,6 +42,7 @@ public class FrmBienvenida extends javax.swing.JInternalFrame {
         btnProductos = new javax.swing.JButton();
         btnClientes = new javax.swing.JButton();
         btnVentas = new javax.swing.JButton();
+        btnProveedores = new javax.swing.JButton();
 
         setClosable(true);
         setIconifiable(true);
@@ -98,21 +96,27 @@ public class FrmBienvenida extends javax.swing.JInternalFrame {
         btnVentas.setText("Punto de Venta / Ventas");
         btnVentas.addActionListener(this::btnVentasActionPerformed);
 
+        btnProveedores.setText("Proveedores");
+        btnProveedores.addActionListener(this::btnProveedoresActionPerformed);
+
         javax.swing.GroupLayout pnlCardsLayout = new javax.swing.GroupLayout(pnlCards);
         pnlCards.setLayout(pnlCardsLayout);
         pnlCardsLayout.setHorizontalGroup(
             pnlCardsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(pnlCardsLayout.createSequentialGroup()
-                .addGroup(pnlCardsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(pnlCardsLayout.createSequentialGroup()
-                        .addGap(198, 198, 198)
-                        .addGroup(pnlCardsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(btnVentas)
-                            .addComponent(btnProductos)))
-                    .addGroup(pnlCardsLayout.createSequentialGroup()
-                        .addGap(210, 210, 210)
-                        .addComponent(btnClientes)))
-                .addContainerGap(233, Short.MAX_VALUE))
+                .addGroup(pnlCardsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(btnVentas)
+                    .addGroup(pnlCardsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(pnlCardsLayout.createSequentialGroup()
+                            .addGap(198, 198, 198)
+                            .addComponent(btnProductos))
+                        .addGroup(pnlCardsLayout.createSequentialGroup()
+                            .addGap(209, 209, 209)
+                            .addComponent(btnClientes))
+                        .addGroup(pnlCardsLayout.createSequentialGroup()
+                            .addGap(229, 229, 229)
+                            .addComponent(btnProveedores))))
+                .addContainerGap(235, Short.MAX_VALUE))
         );
         pnlCardsLayout.setVerticalGroup(
             pnlCardsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -122,8 +126,10 @@ public class FrmBienvenida extends javax.swing.JInternalFrame {
                 .addGap(18, 18, 18)
                 .addComponent(btnClientes)
                 .addGap(18, 18, 18)
+                .addComponent(btnProveedores)
+                .addGap(18, 18, 18)
                 .addComponent(btnVentas)
-                .addContainerGap(203, Short.MAX_VALUE))
+                .addContainerGap(146, Short.MAX_VALUE))
         );
 
         getContentPane().add(pnlCards, java.awt.BorderLayout.CENTER);
@@ -132,22 +138,20 @@ public class FrmBienvenida extends javax.swing.JInternalFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnProductosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnProductosActionPerformed
-        // TODO add your handling code here:
-        py.edu.utic.lpii.view.FrmPrincipal principal = 
-            (py.edu.utic.lpii.view.FrmPrincipal) javax.swing.SwingUtilities.getWindowAncestor(this);
+        // Obtenemos la instancia del FrmPrincipal de forma directa:
+        py.edu.utic.lpii.view.FrmPrincipal principal
+                = (py.edu.utic.lpii.view.FrmPrincipal) javax.swing.SwingUtilities.getWindowAncestor(this);
 
-        // 2. Si se encontró la ventana principal, invocamos su método para abrir el formulario centrado:
         if (principal != null) {
-            principal.abrirFormularioCentrado(new FrmProductos());
+            // Usamos el gestor de ventanas únicas que ya tienes en FrmPrincipal
+            principal.abrirUnico(FrmProductos.class, FrmProductos::new);
         }
     }//GEN-LAST:event_btnProductosActionPerformed
 
     private void btnClientesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClientesActionPerformed
-        // TODO add your handling code here:
-        py.edu.utic.lpii.view.FrmPrincipal principal = 
-            (py.edu.utic.lpii.view.FrmPrincipal) javax.swing.SwingUtilities.getWindowAncestor(this);
+        py.edu.utic.lpii.view.FrmPrincipal principal
+                = (py.edu.utic.lpii.view.FrmPrincipal) javax.swing.SwingUtilities.getWindowAncestor(this);
 
-        // 2. Si se encontró, invocamos el método para abrir la gestión de clientes centrada:
         if (principal != null) {
             principal.abrirFormularioCentrado(new FrmClientes());
         }
@@ -155,19 +159,29 @@ public class FrmBienvenida extends javax.swing.JInternalFrame {
 
     private void btnVentasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVentasActionPerformed
         // TODO add your handling code here:
-        py.edu.utic.lpii.view.FrmPrincipal principal = 
-            (py.edu.utic.lpii.view.FrmPrincipal) javax.swing.SwingUtilities.getWindowAncestor(this);
+        py.edu.utic.lpii.view.FrmPrincipal principal
+                = (py.edu.utic.lpii.view.FrmPrincipal) javax.swing.SwingUtilities.getWindowAncestor(this);
 
-        // 2. Si se encontró, invocamos el método para abrir la gestión de clientes centrada:
         if (principal != null) {
-            principal.abrirFormularioCentrado(new FrmProveedores());
+            principal.abrirUnico(FrmFacturaVenta.class, FrmFacturaVenta::new);
         }
+
     }//GEN-LAST:event_btnVentasActionPerformed
+
+    private void btnProveedoresActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnProveedoresActionPerformed
+        py.edu.utic.lpii.view.FrmPrincipal principal
+                = (py.edu.utic.lpii.view.FrmPrincipal) javax.swing.SwingUtilities.getWindowAncestor(this);
+
+        if (principal != null) {
+            principal.abrirUnico(FrmProveedores.class, FrmProveedores::new);
+        }
+    }//GEN-LAST:event_btnProveedoresActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnClientes;
     private javax.swing.JButton btnProductos;
+    private javax.swing.JButton btnProveedores;
     private javax.swing.JButton btnVentas;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;

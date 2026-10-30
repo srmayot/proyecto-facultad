@@ -15,6 +15,7 @@ public class Cliente {
     private String telefono;
     private String email;
     private String direccion;
+    private String tipo; // "FÍSICO" o "JURÍDICO"
     private boolean activo;
 
     // =========================================================================
@@ -22,16 +23,18 @@ public class Cliente {
     // =========================================================================
     public Cliente() {
         this.activo = true;
+        this.tipo = "FÍSICO"; // Valor por defecto
     }
 
-    public Cliente(Integer id, String ruc, String razonSocial, String telefono, String email, String direccion) {
+    public Cliente(Integer id, String ruc, String razonSocial, String telefono, String email, String direccion, String tipo, boolean activo) {
         this.id = id;
         this.setRuc(ruc); // Aplica validación obligatoria
         this.setRazonSocial(razonSocial);
         this.telefono = telefono;
         this.email = email;
         this.direccion = direccion;
-        this.activo = true;
+        this.tipo = tipo;
+        this.activo = activo;
     }
 
     // =========================================================================
@@ -61,11 +64,7 @@ public class Cliente {
     }
 
     /**
-     * Implementación oficial de la SET / DNIT para el cálculo del Dígito Verificador:
-     * 1. Recorre los dígitos del número de derecha a izquierda.
-     * 2. Multiplica cada dígito por un factor ponderador k que inicia en 2 y llega hasta 11.
-     * 3. Si k supera 11, se reinicia en 2.
-     * 4. Se calcula el residuo de la suma módulo 11: si residuo > 1, DV = 11 - residuo; sino DV = 0.
+     * Implementación oficial de la SET / DNIT para el cálculo del Dígito Verificador.
      */
     public static int calcularDigitoVerificador(String numero) {
         int basemax = 11;
@@ -111,6 +110,9 @@ public class Cliente {
 
     public String getDireccion() { return direccion; }
     public void setDireccion(String direccion) { this.direccion = direccion; }
+
+    public String getTipo() { return tipo; }
+    public void setTipo(String tipo) { this.tipo = tipo; }
 
     public boolean isActivo() { return activo; }
     public void setActivo(boolean activo) { this.activo = activo; }
